@@ -30,6 +30,7 @@ class RequestTypeToFileServer(Enum):
     FILE_DOES_EXIST = 9
     FILE_DOES_NOT_EXIST = 10
     DIRECTORY_FOUND = 11
+    DIRECTORY_NOT_FOUND = 11
 
     # locking functionality
     # TODO - this will be implemented later when I get around ot locking services

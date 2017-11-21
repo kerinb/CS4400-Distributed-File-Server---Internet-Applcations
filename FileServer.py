@@ -60,7 +60,23 @@ def get_server_running_value():
 
 
 def check_if_directory_exists(message, connection):
-    pass
+    directory_to_check = SERVER_FILE_ROOT + message[1] + "/"
+    full_file_path = directory_to_check + message[2]
+
+    print "Client wants to verify the following directory exists:\n" + full_file_path
+    response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_NOT_FOUND
+    if os.path.exists(directory_to_check):
+        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_FOUND
+        # we found directory
+        print "The directory exists....\nChecking for file now..."
+        if os.path.isfile(full_file_path):
+            print "File found in directory!"
+            response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST
+        else:
+            print "File not found but directory does exist..."
+        connection.sendall(str(response_to_client))
+    print "Directory not found...."
+    connection.sendall(str(response_to_client))
 
 
 def open_file(split_data_received_from_client, connected_to_file_server):
