@@ -6,6 +6,9 @@
 import sys
 
 from threading import Thread
+
+import time
+
 import RequestTypeToFileServer, traceback, socket, os, select
 
 DEFAULT_PORT_NUMBER = 45678
@@ -168,7 +171,7 @@ def main():
             print "File Server is shutting down...."
 
         except Exception as e:
-            print "Exception thrown during server initialisation..."
+            print time.ctime(time.time()) + "Exception thrown during server initialisation..."
             print e.message
             print traceback.format_exc()
         finally:
@@ -176,7 +179,7 @@ def main():
             sock.close()
 
     except Exception as e:
-        print "Exception thrown during server initialisation..."
+        print time.ctime(time.time()) + "Exception thrown during server initialisation..."
         print e.message
         print traceback.format_exc()
 

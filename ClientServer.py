@@ -2,10 +2,11 @@
 # @Author: Breandan Kerin
 # @Student Number: 14310166
 #
+import time
 
+import RequestTypeToFileServer
+import traceback
 from socket import gethostbyname, getfqdn, socket, AF_INET, SOCK_STREAM
-
-import traceback, RequestTypeToFileServer
 
 DEFAULT_PORT_NUMBER = 45678
 DEFAULT_HOST_NAME = gethostbyname(getfqdn())
@@ -106,7 +107,7 @@ def create_and_maintain_connection_to_server(host_name, port_number):
                 "\nK: kill server")
             running = handle_user_request_for_file_server(user_request_for_server, sock, running)
         except Exception as e:
-            print "ERROR: An error occurred when handling the user input...\n"
+            print time.ctime(time.time()) + "ERROR: An error occurred when handling the user input...\n"
             print e.message
             print traceback.format_exc()
 
