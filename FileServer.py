@@ -4,14 +4,23 @@
 #
 
 import sys
-
+import time
 from threading import Thread
 
-import time
+import RequestTypeToFileServer
+import os
+import select
+import socket
+import traceback
 
-import RequestTypeToFileServer, traceback, socket, os, select
+is_py2 = sys.version[0] == "2"
+if is_py2:
+    import Queue as queue
+else:
+    import queue as queue
 
 DEFAULT_PORT_NUMBER = 45678
+MAX_NUM_BYTES = 2048
 HOST = ""
 SERVER_FILE_ROOT = 'Server/'
 IP_ADDRESS = socket.gethostbyname(socket.getfqdn())
@@ -27,20 +36,20 @@ class MyThread(Thread):
 
     def run(self):
         while self.on:
-            task, args, kargs = self.tasks.get()
-            self.on = task(*args, **kargs)
+            funcs, args, kargs = self.tasks.get()
+            self.on = funcs(*args, **kargs)
 
 
 class ListOfThreads:
     def __init__(self, num_of_threads, size_of_queue):
-        self.queue = size_of_queue
+        self.queue = queue.Queue(size_of_queue)
         self.num_of_threads = num_of_threads
         self.threads = []
         for i in range(0, num_of_threads):
             self.threads.append(MyThread(self.queue))
 
     def wait_for_thread_to_complete(self):
-        self.tasks.join()
+        self.task.join()
 
     def end_threads(self):
         for i in range(0, self.num_of_threads):
@@ -79,75 +88,75 @@ def check_if_directory_exists(message, connection):
     connection.sendall(str(response_to_client))
 
 
-def open_file(split_data_received_from_client, connected_to_file_server):
+def open_file(split_data_received_from_client, connection):
     pass
 
 
-def write_to_file(split_data_received_from_client, connected_to_file_server):
+def write_to_file(split_data_received_from_client, connection):
     pass
 
 
-def create_a_new_file(split_data_received_from_client, connected_to_file_server):
+def create_a_new_file(split_data_received_from_client, connection):
     pass
 
 
-def assign_id_to_client(split_data_received_from_client, connected_to_file_server):
+def assign_id_to_client(split_data_received_from_client, connection):
     pass
 
 
-def delete_file_from_server(split_data_received_from_client, connected_to_file_server):
+def delete_file_from_server(split_data_received_from_client, connection):
     pass
 
 
-def handle_client_request(data_received_from_client, connected_to_file_server):
+def handle_client_request(data_received_from_client, connection):
     if data_received_from_client == "kill":
         print "Shutting down file server"
-        connected_to_file_server = False
         set_server_running_value(False)
     else:
         split_data_received_from_client = data_received_from_client.split("\n")
         request_type = str(split_data_received_from_client[0])
+        print "ENUM VALUE: " + str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_DIRECTORY_EXIST.value)
         print "The Request made by the client is:" + request_type
 
-        if request_type == RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_DIRECTORY_EXIST.value:
+        if request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_DIRECTORY_EXIST.value):
             print "Client requested to check if a directory exists..."
-            check_if_directory_exists(split_data_received_from_client, connected_to_file_server)
+            check_if_directory_exists(split_data_received_from_client, connection)
 
-        elif request_type == RequestTypeToFileServer.RequestTypeToFileServer.OPEN_FILE:
+        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.OPEN_FILE):
             print "Client requested to open a file..."
-            open_file(split_data_received_from_client, connected_to_file_server)
+            open_file(split_data_received_from_client, connection)
 
-        elif request_type == RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE:
+        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE):
             print "Client has requested to write to a file..."
-            write_to_file(split_data_received_from_client, connected_to_file_server)
+            write_to_file(split_data_received_from_client, connection)
 
-        elif request_type == RequestTypeToFileServer.RequestTypeToFileServer.CREATE_File:
+        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CREATE_File):
             print "Client has requested to create a file..."
-            create_a_new_file(split_data_received_from_client,connected_to_file_server)
+            create_a_new_file(split_data_received_from_client,connection)
 
-        elif request_type == RequestTypeToFileServer.RequestTypeToFileServer.REQUEST_CLIENT_ID:
+        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.REQUEST_CLIENT_ID):
             print "Client has requested to have an ID assigned to them..."
-            assign_id_to_client(split_data_received_from_client, connected_to_file_server)
+            assign_id_to_client(split_data_received_from_client, connection)
 
-        elif request_type == RequestTypeToFileServer.RequestTypeToFileServer.DELETE_FILE:
+        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.DELETE_FILE):
             print "Client has requested to delete a file..."
-            delete_file_from_server(split_data_received_from_client, connected_to_file_server)
+            delete_file_from_server(split_data_received_from_client, connection)
         else:
             print "ERROR: Invalid request was sent by the client:\nREQUEST: " + request_type
-    return connected_to_file_server
+    return connection
 
 
 def accept_client_connection(connection, address):
     print "File Server received a new connection from " + str(address)
     connected_to_file_server = True
     while connected_to_file_server:
-        data_received_from_client = connection.recv()
+        data_received_from_client = connection.recv(MAX_NUM_BYTES)
 
         if not data_received_from_client:
             print "No data received..."
             continue
         else:
-            connected_to_file_server = handle_client_request(data_received_from_client, connected_to_file_server)
+            connected_to_file_server = handle_client_request(data_received_from_client, connection)
     print "Connection closed..."
     return connected_to_file_server
 

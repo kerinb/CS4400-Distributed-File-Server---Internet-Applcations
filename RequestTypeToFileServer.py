@@ -18,7 +18,7 @@ class RequestTypeToFileServer(Enum):
     # request messages sent by the client
     CHECK_FOR_DIRECTORY_EXIST = 0
     OPEN_FILE = 1
-    CREATE_File = 1
+    CREATE_File = 2
     READ_FILE = 3
     WRITE_TO_FILE = 4
     DELETE_FILE = 5
@@ -28,8 +28,7 @@ class RequestTypeToFileServer(Enum):
 
     # server response messages to client
     FILE_DOES_EXIST = 9
-    FILE_DOES_NOT_EXIST = 10
-    DIRECTORY_FOUND = 11
+    DIRECTORY_FOUND = 10
     DIRECTORY_NOT_FOUND = 11
 
     # locking functionality
