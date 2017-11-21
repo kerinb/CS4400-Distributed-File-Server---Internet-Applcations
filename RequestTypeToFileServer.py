@@ -18,20 +18,21 @@ class RequestTypeToFileServer(Enum):
     # request messages sent by the client
     CHECK_FOR_DIRECTORY_EXIST = 0
     OPEN_FILE = 1
-    READ_FILE = 2
-    CREATE_DIRECTORY = 3
+    CREATE_File = 1
+    READ_FILE = 3
     WRITE_TO_FILE = 4
-    DELETE_FILE = 6
-    REQUEST_SENT_BY_CLIENT = 7
-    RESPONSE_SENT_BY_CLIENT = 8
+    DELETE_FILE = 5
+    CREATE_DIRECTORY = 6
+    REQUEST_CLIENT_ID = 7
+    RESPONSE_CLIENT_ID = 8
 
     # server response messages to client
-    FILE_DOES_EXIST_AND_NOT_LOCKED = 9
-    FILE_DOES_EXIST_AND_LOCKED = 10
-    FILE_DOES_NOT_EXIST = 11
-    DIRECTORY_FOUND = 12
+    FILE_DOES_EXIST = 9
+    FILE_DOES_NOT_EXIST = 10
+    DIRECTORY_FOUND = 11
 
     # locking functionality
+    # TODO - this will be implemented later when I get around ot locking services
     LOCK_FILE_REQUEST = 13
     UNLOCK_FILE_REQUEST = 14
     LOCK_FILE_REQUEST_REFUSED = 13
