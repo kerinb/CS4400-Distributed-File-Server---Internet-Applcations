@@ -16,9 +16,9 @@ class RequestTypeToFileServer(Enum):
         return str(self.value)
 
     # request messages sent by the client
-    CHECK_FOR_DIRECTORY_EXIST = 0
+    CHECK_FOR_FILE_EXIST = 0
     OPEN_FILE = 1
-    CREATE_File = 2
+    CREATE_FILE = 2
     READ_FILE = 3
     WRITE_TO_FILE = 4
     DELETE_FILE = 5
@@ -30,10 +30,12 @@ class RequestTypeToFileServer(Enum):
     FILE_DOES_EXIST = 9
     DIRECTORY_FOUND = 10
     DIRECTORY_NOT_FOUND = 11
+    FILE_MADE = 12
+    FILE_NOT_MADE = 13
 
     # locking functionality
     # TODO - this will be implemented later when I get around ot locking services
-    LOCK_FILE_REQUEST = 13
-    UNLOCK_FILE_REQUEST = 14
-    LOCK_FILE_REQUEST_REFUSED = 13
-    UNLOCK_FILE_REQUEST_REFUSED = 14
+    #LOCK_FILE_REQUEST = 13
+    #UNLOCK_FILE_REQUEST = 14
+    #LOCK_FILE_REQUEST_REFUSED = 13
+    #UNLOCK_FILE_REQUEST_REFUSED = 14

@@ -9,7 +9,6 @@ import RequestTypeToFileServer
 import traceback
 from socket import gethostbyname, getfqdn, socket, AF_INET, SOCK_STREAM
 
-from FileServer import delete_file_from_server
 
 DEFAULT_PORT_NUMBER = 45678
 DEFAULT_HOST_NAME = gethostbyname(getfqdn())
@@ -44,23 +43,27 @@ def get_file_name_and_path_from_user():
 
 def decode_response_from_server(response_from_file_server):
     if response_from_file_server == "9":
-        print "RESPONSE: File exists in directory specified by client..."
+        print "RESPONSE FROM FILE SERVER: File exists in directory specified by client..."
     if response_from_file_server == "10":
-        print "RESPONSE: Directory found but specified file not found..."
+        print "RESPONSE FROM FILE SERVER: Directory found but specified file not found..."
     if response_from_file_server == "11":
-        print "RESPONSE: Directory not found..."
+        print "RESPONSE FROM FILE SERVER: Directory not found..."
+    if response_from_file_server == "12":
+        print "RESPONSE FROM FILE SERVER: requested file was created..."
+    if response_from_file_server == "13":
+        print "RESPONSE FROM FILE SERVER:  requested file was not created..."
 
 
 def check_if_file_exists_on_file_server(file_name, file_path, sock):
     # have to send request to server, who will verify if the file exists.
-    message_to_file_server = str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_DIRECTORY_EXIST) + "\n" + \
+    message_to_file_server = str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_FILE_EXIST) + "\n" + \
                              file_path + "\n" + file_name
     print "Checking for file: " + file_path + "/" + file_name
     print "Sending " + message_to_file_server + " to file server...."
     sock.sendall(message_to_file_server)
     print "Sent request to file server to confirm if requested file exists in requested path..."
 
-    # responce from server
+    # response from server
     response_from_file_server = sock.recv(MAX_NUM_BYTES)
     decode_response_from_server(response_from_file_server)
 
@@ -74,6 +77,19 @@ def write_file_to_server(file_name, file_path, sock):
 
 
 def create_file_on_server(file_name, file_path, sock):
+    message_to_file_server = str(RequestTypeToFileServer.RequestTypeToFileServer.CREATE_FILE) + "\n" + \
+                             file_path + "\n" + file_name + "\n"
+    print "Checking for file: " + file_path + "/" + file_name
+    print "Sending " + message_to_file_server + " to file server...."
+    sock.sendall(message_to_file_server)
+    print "Sent request to file server to confirm if requested file exists in requested path..."
+
+    # response from server
+    response_from_file_server = sock.recv(MAX_NUM_BYTES)
+    decode_response_from_server(response_from_file_server)
+
+
+def delete_file_from_server(file_name, file_path, sock):
     pass
 
 
@@ -110,7 +126,7 @@ def handle_user_request_for_file_server(user_request_for_server, sock, running):
             create_file_on_server(file_name, file_path, sock)
 
         elif user_request_for_server == "3":
-            print "User requested to Write file to server..."
+            print "User requested to read file from server..."
             file_path, file_name = get_file_name_and_path_from_user()
             read_file_from_server(file_name, file_path, sock)
 
@@ -120,12 +136,12 @@ def handle_user_request_for_file_server(user_request_for_server, sock, running):
             write_file_to_server(file_name, file_path, sock)
 
         elif user_request_for_server == "5":
-            print "User requested to Write file to server..."
+            print "User requested to delete file from server..."
             file_path, file_name = get_file_name_and_path_from_user()
             delete_file_from_server(file_name, file_path, sock)
 
         elif user_request_for_server == "6":
-            print "User requested to Write file to server..."
+            print "User requested to create new directory on server..."
             file_path, file_name = get_file_name_and_path_from_user()
             create_directory_on_server(file_name, file_path, sock)
 
@@ -149,11 +165,11 @@ def create_and_maintain_connection_to_server(host_name, port_number):
                 "Select an option:"
                 "\n0: Verify File is on Server"
                 "\n1: Open file from server"
-                "\n2: Write file to server"
-                "\n3: Create new file"
-                "\n4: Create new file"
-                "\n5: Create new file"
-                "\n6: Create new file"
+                "\n2: Create new file on server"
+                "\n3: Read File from server"
+                "\n4: Write to file"
+                "\n5: Delete file"
+                "\n6: Create new Directory"
                 "\nC: close connection"
                 "\nK: kill server")
             running = handle_user_request_for_file_server(user_request_for_server, sock, running)
