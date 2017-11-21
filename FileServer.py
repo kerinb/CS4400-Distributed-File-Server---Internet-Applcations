@@ -12,12 +12,8 @@ import os
 import select
 import socket
 import traceback
+import Queue as queue
 
-is_py2 = sys.version[0] == "2"
-if is_py2:
-    import Queue as queue
-else:
-    import queue as queue
 
 DEFAULT_PORT_NUMBER = 45678
 MAX_NUM_BYTES = 2048
@@ -102,7 +98,7 @@ def make_file(file_to_create):
     response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_NOT_MADE
     if not os.path.exists(file_to_create):
         print "Creating file: " + file_to_create + "..."
-        file = open(file_to_create, 'a')
+        file = open(file_to_create, 'w')
         file.close()
         response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_MADE
         print "Created file: " + file_to_create + "..."
@@ -110,8 +106,8 @@ def make_file(file_to_create):
 
 
 def create_a_new_file(message, connection):
-    directory = message[1]
-    file_to_create = message[1] + message[2] + FILE_EXTENSION_TXT
+    directory = SERVER_FILE_ROOT + message[1]
+    file_to_create = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
     print "File to create: " + file_to_create
     print "In directory: " + directory
 
