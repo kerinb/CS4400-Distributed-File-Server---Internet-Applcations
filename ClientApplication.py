@@ -9,11 +9,11 @@ import RequestTypeToFileServer
 import traceback
 from socket import gethostbyname, getfqdn, socket, AF_INET, SOCK_STREAM
 
-
 DEFAULT_PORT_NUMBER = 45678
 DEFAULT_HOST_NAME = gethostbyname(getfqdn())
 MAX_NUM_BYTES = 2048
 CLIENT_DEFAULT_ID = ""
+SERVER_FILE_ROOT = 'Server/'
 
 
 def create_connection_to_file_server(host_name, port_number):
@@ -44,19 +44,29 @@ def get_file_name_and_path_from_user():
 def decode_response_from_server(response_from_file_server):
     if response_from_file_server == "9":
         print "RESPONSE FROM FILE SERVER: File exists in directory specified by client..."
+
     if response_from_file_server == "10":
         print "RESPONSE FROM FILE SERVER: Directory found but specified file not found..."
+
     if response_from_file_server == "11":
-        print "RESPONSE FROM FILE SERVER: Directory not found..."
+        print "RESPONSE FROM FILE SERVER: Directory and file not found..."
+
     if response_from_file_server == "12":
         print "RESPONSE FROM FILE SERVER: requested file was created..."
+
     if response_from_file_server == "13":
         print "RESPONSE FROM FILE SERVER:  requested file was not created..."
+
     if response_from_file_server == "14":
-        print "RESPONSE FROM FILE SERVER:  requested file was deleted..."
+        print "RESPONSE FROM FILE SERVER:  requested file already exists..."
+
     if response_from_file_server == "15":
-        print "RESPONSE FROM FILE SERVER:  requested file was not found in given directory..."
+        print "RESPONSE FROM FILE SERVER:  requested file was deleted..."
+
     if response_from_file_server == "16":
+        print "RESPONSE FROM FILE SERVER:  directory given found but file not found and deleted..."
+
+    if response_from_file_server == "17":
         print "RESPONSE FROM FILE SERVER:  directory given not found... file not deleted..."
 
 
@@ -74,8 +84,33 @@ def check_if_file_exists_on_file_server(file_name, file_path, sock):
     decode_response_from_server(response_from_file_server)
 
 
+def handle_open_file_response(response_from_file_server, full_file_path, sock):
+    if response_from_file_server == str(RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST):
+        print "File: " + full_file_path + " exists on file server..."
+
+        print "Opening: " + full_file_path + "..."
+        f = open(full_file_path, 'w')
+        connected_for_file_reading = True
+        while connected_for_file_reading:
+            data_from_file = sock.recv(MAX_NUM_BYTES)
+            f.write(data_from_file)
+            connected_for_file_reading = len(data_from_file) == MAX_NUM_BYTES
+        print "file downloaded from server....\nClosing local copy..."
+        f.close()
+    else:
+        print "File: " + full_file_path + " not opened... Doesnt exist..."
+
+
+# TODO - May have to integrate this with some form caching later...
 def open_file_on_server(file_name, file_path, sock):
-    pass
+    print "Opening file: " + file_name + " In: " + file_path
+    message = str(RequestTypeToFileServer.RequestTypeToFileServer.OPEN_FILE) + "\n" + file_path + "\n" + file_name
+    sock.sendall(message)
+    full_file_path = SERVER_FILE_ROOT + file_path + "/" + file_name
+    print "Request sent to file server to open " + full_file_path
+    response_from_file_server = sock.recv(MAX_NUM_BYTES)
+    decode_response_from_server(response_from_file_server)
+    handle_open_file_response(response_from_file_server, full_file_path, sock)
 
 
 def write_file_to_server(file_name, file_path, sock):

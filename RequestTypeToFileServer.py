@@ -32,9 +32,10 @@ class RequestTypeToFileServer(Enum):
     DIRECTORY_NOT_FOUND = 11
     FILE_MADE = 12
     FILE_NOT_MADE = 13
-    FILE_DELETED = 14
-    FILE_NOT_DELETED_DIRECTORY_FOUND = 15
-    FILE_NOT_DELETED_DIRECTORY_NOT_FOUND = 16
+    FILE_ALREADY_EXISTS = 14
+    FILE_DELETED = 15
+    FILE_NOT_DELETED_DIRECTORY_FOUND = 16
+    FILE_NOT_DELETED_DIRECTORY_NOT_FOUND = 17
 
     # locking functionality
     # TODO - this will be implemented later when I get around ot locking services

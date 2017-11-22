@@ -85,8 +85,30 @@ def check_if_directory_exists(message):
     return response_to_client
 
 
-def open_file(message):
-    pass
+def send_file_to_client(full_file_path, connection):
+    f = open(full_file_path)
+    file_data_to_send_client = f.read(MAX_NUM_BYTES)
+    while file_data_to_send_client != '':
+        connection.sendall(file_data_to_send_client)
+        print "SENDING: " + file_data_to_send_client + " ---- To Client..."
+        file_data_to_send_client = f.read(MAX_NUM_BYTES)
+    print "Entire file sent to client...."
+    f.close()
+
+
+def open_file(message, connection):
+    directory = SERVER_FILE_ROOT + message[1] + "/"
+    full_file_path = directory + message[2] + FILE_EXTENSION_TXT
+
+    response_to_client = check_if_directory_exists(message)
+    if response_to_client == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
+        print "Requested file client wants to open exists one file directory..."
+        connection.sendall(response_to_client)
+        send_file_to_client(full_file_path, connection)
+    else:
+        print "File: " + full_file_path + " ---- Doesnt exist..."
+        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_NOT_EXIST
+        connection.sendall(response_to_client)
 
 
 def write_to_file(message):
@@ -157,15 +179,14 @@ def handle_client_request(data_received_from_client, connection):
 
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.OPEN_FILE):
             print "Client requested to open a file..."
-            response_to_client = open_file(split_data_received_from_client)
-            connection.sendall(str(response_to_client))
+            open_file(split_data_received_from_client, connection)
 
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE):
             print "Client has requested to write to a file..."
             response_to_client =  write_to_file(split_data_received_from_client)
             connection.sendall(str(response_to_client))
 
-        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CREATE_FILE):
+        elif str(RequestTypeToFileServer.RequestTypeToFileServer.CREATE_FILE) == request_type:
             print "Client has requested to create a file..."
             response_to_client = create_a_new_file(split_data_received_from_client)
             connection.sendall(str(response_to_client))
