@@ -66,12 +66,15 @@ def get_server_running_value():
 
 
 def check_if_directory_exists(message):
-    directory_to_check = SERVER_FILE_ROOT + message[1] + "/"
-    full_file_path = directory_to_check + message[2]
+    path = SERVER_FILE_ROOT + message[1]
+    if path.endswith("/") or path == "":
+        full_file_path = SERVER_FILE_ROOT + message[1] + message[2] + FILE_EXTENSION_TXT
+    else:
+        full_file_path = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
 
     print "Client wants to verify the following directory exists:\n" + full_file_path
     response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_NOT_FOUND
-    if os.path.exists(directory_to_check):
+    if os.path.exists(path):
         response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_FOUND
         # we found directory
         print "The directory exists....\nChecking for file now..."
@@ -89,7 +92,7 @@ def send_file_to_client(full_file_path, connection):
     f = open(full_file_path)
     file_data_to_send_client = f.read(MAX_NUM_BYTES)
     while file_data_to_send_client != '':
-        connection.sendall(file_data_to_send_client)
+        connection.sendall(str(file_data_to_send_client))
         print "SENDING: " + file_data_to_send_client + " ---- To Client..."
         file_data_to_send_client = f.read(MAX_NUM_BYTES)
     print "Entire file sent to client...."
@@ -97,18 +100,21 @@ def send_file_to_client(full_file_path, connection):
 
 
 def open_file(message, connection):
-    directory = SERVER_FILE_ROOT + message[1] + "/"
-    full_file_path = directory + message[2] + FILE_EXTENSION_TXT
+    path = message[1]
+    if path.endswith("/") or path == "":
+        full_file_path = SERVER_FILE_ROOT + message[1] + message[2] + FILE_EXTENSION_TXT
+    else:
+        full_file_path = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
 
     response_to_client = check_if_directory_exists(message)
     if response_to_client == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
         print "Requested file client wants to open exists one file directory..."
-        connection.sendall(response_to_client)
+        connection.sendall(str(response_to_client))
         send_file_to_client(full_file_path, connection)
     else:
         print "File: " + full_file_path + " ---- Doesnt exist..."
         response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_NOT_EXIST
-        connection.sendall(response_to_client)
+        connection.sendall(str(response_to_client))
 
 
 def write_to_file(message):
@@ -129,7 +135,11 @@ def make_file(file_to_create):
 
 def create_a_new_file(message):
     directory = SERVER_FILE_ROOT + message[1]
-    file_to_create = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
+    path = message[1]
+    if path.endswith("/") or path == "":
+        file_to_create = SERVER_FILE_ROOT + message[1] + message[2] + FILE_EXTENSION_TXT
+    else:
+        file_to_create = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
     print "File to create: " + file_to_create
     print "In directory: " + directory
 

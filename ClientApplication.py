@@ -5,6 +5,8 @@
 import time
 from pyasn1.compat.octets import null
 
+import os
+
 import RequestTypeToFileServer
 import traceback
 from socket import gethostbyname, getfqdn, socket, AF_INET, SOCK_STREAM
@@ -13,7 +15,8 @@ DEFAULT_PORT_NUMBER = 45678
 DEFAULT_HOST_NAME = gethostbyname(getfqdn())
 MAX_NUM_BYTES = 2048
 CLIENT_DEFAULT_ID = ""
-SERVER_FILE_ROOT = 'Server/'
+CLIENT_FILE_ROOT = 'Client/'
+FILE_EXTENSION_TXT = ".txt"
 
 
 def create_connection_to_file_server(host_name, port_number):
@@ -106,7 +109,10 @@ def open_file_on_server(file_name, file_path, sock):
     print "Opening file: " + file_name + " In: " + file_path
     message = str(RequestTypeToFileServer.RequestTypeToFileServer.OPEN_FILE) + "\n" + file_path + "\n" + file_name
     sock.sendall(message)
-    full_file_path = SERVER_FILE_ROOT + file_path + "/" + file_name
+    if file_path.endswith("/") or file_path == "":
+        full_file_path = CLIENT_FILE_ROOT + file_path + file_name + FILE_EXTENSION_TXT
+    else:
+        full_file_path = CLIENT_FILE_ROOT + file_path + "/" + file_name + FILE_EXTENSION_TXT
     print "Request sent to file server to open " + full_file_path
     response_from_file_server = sock.recv(MAX_NUM_BYTES)
     decode_response_from_server(response_from_file_server)
@@ -128,6 +134,13 @@ def create_file_on_server(file_name, file_path, sock):
     # response from server
     response_from_file_server = sock.recv(MAX_NUM_BYTES)
     decode_response_from_server(response_from_file_server)
+
+
+def make_directory(directory_to_create):
+    if not os.path.exists(directory_to_create):
+        print "Creating root directory 'Server/'..."
+        os.makedirs(directory_to_create)
+        print "Created root directory 'Server/'..."
 
 
 def delete_file_from_server(file_name, file_path, sock):
@@ -234,6 +247,7 @@ def main():
 
     # keep client alive
     while running:
+        make_directory(CLIENT_FILE_ROOT)
         user_request = raw_input("Select an option:\n1: Open connection to file server\nE: Shut down\n")
 
         if user_request == "E" or user_request == "e":
