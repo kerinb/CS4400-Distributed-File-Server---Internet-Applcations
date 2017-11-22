@@ -36,8 +36,8 @@ def create_connection_to_file_server(host_name, port_number):
 
 
 def get_file_name_and_path_from_user():
-    file_path = raw_input("Enter path to destination file:\n")
-    file_name = raw_input("Enter name of destination file:\n")
+    file_path = raw_input("Enter path to destination file, each folder seperated with a '/':\n")
+    file_name = raw_input("Enter name of destination file, no need to include file extension, .TXT assumed:\n")
     return file_path, file_name
 
 
@@ -52,6 +52,12 @@ def decode_response_from_server(response_from_file_server):
         print "RESPONSE FROM FILE SERVER: requested file was created..."
     if response_from_file_server == "13":
         print "RESPONSE FROM FILE SERVER:  requested file was not created..."
+    if response_from_file_server == "14":
+        print "RESPONSE FROM FILE SERVER:  requested file was deleted..."
+    if response_from_file_server == "15":
+        print "RESPONSE FROM FILE SERVER:  requested file was not found in given directory..."
+    if response_from_file_server == "16":
+        print "RESPONSE FROM FILE SERVER:  directory given not found... file not deleted..."
 
 
 def check_if_file_exists_on_file_server(file_name, file_path, sock):
@@ -90,7 +96,16 @@ def create_file_on_server(file_name, file_path, sock):
 
 
 def delete_file_from_server(file_name, file_path, sock):
-    pass
+    message_to_file_server = str(RequestTypeToFileServer.RequestTypeToFileServer.DELETE_FILE) + "\n" + \
+                             file_path + "\n" + file_name + "\n"
+    print "Checking for file: " + file_path + "/" + file_name
+    print "Sending " + message_to_file_server + " to file server...."
+    sock.sendall(message_to_file_server)
+    print "Sent request to file server to delete file in requested path..."
+
+    # response from server
+    response_from_file_server = sock.recv(MAX_NUM_BYTES)
+    decode_response_from_server(response_from_file_server)
 
 
 def kill_file_server(sock):

@@ -65,7 +65,7 @@ def get_server_running_value():
     return SERVER_RUNNING
 
 
-def check_if_directory_exists(message, connection):
+def check_if_directory_exists(message):
     directory_to_check = SERVER_FILE_ROOT + message[1] + "/"
     full_file_path = directory_to_check + message[2]
 
@@ -80,16 +80,16 @@ def check_if_directory_exists(message, connection):
             response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST
         else:
             print "File not found but directory does exist..."
-        connection.sendall(str(response_to_client))
+        return response_to_client
     print "Directory not found...."
-    connection.sendall(str(response_to_client))
+    return response_to_client
 
 
-def open_file(message, connection):
+def open_file(message):
     pass
 
 
-def write_to_file(message, connection):
+def write_to_file(message):
     pass
 
 
@@ -98,14 +98,14 @@ def make_file(file_to_create):
     response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_NOT_MADE
     if not os.path.exists(file_to_create):
         print "Creating file: " + file_to_create + "..."
-        file = open(file_to_create, 'w')
-        file.close()
+        f = open(file_to_create, 'w')
+        f.close()
         response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_MADE
         print "Created file: " + file_to_create + "..."
     return response_to_client
 
 
-def create_a_new_file(message, connection):
+def create_a_new_file(message):
     directory = SERVER_FILE_ROOT + message[1]
     file_to_create = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
     print "File to create: " + file_to_create
@@ -114,15 +114,30 @@ def create_a_new_file(message, connection):
     # will make directory if we need....
     make_directory(directory)
     response_to_client = make_file(file_to_create)
-    connection.sendall(str(response_to_client))
+    return response_to_client
 
 
 def assign_id_to_client(message, connection):
     pass
 
 
-def delete_file(message, connection):
-    pass  #
+def delete_file(message):
+    response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_NOT_DELETED_DIRECTORY_NOT_FOUND
+    directory = SERVER_FILE_ROOT + message[1]
+    file_to_delete = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
+    print "file to delete: " + file_to_delete
+    if not os.path.exists(directory):
+        print "Directory does not exist...\ncan't delete file..."
+    else:
+        if not os.path.exists(file_to_delete):
+            print "file does not exist is directory..."
+            response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_NOT_DELETED_DIRECTORY_FOUND
+        else:
+            print "file will be deleted..."
+            os.remove(file_to_delete)
+            response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_DELETED
+            print "file has been deleted..."
+    return response_to_client
 
 
 def handle_client_request(data_received_from_client, connection):
@@ -137,27 +152,33 @@ def handle_client_request(data_received_from_client, connection):
 
         if request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_FILE_EXIST.value):
             print "Client requested to check if a directory exists..."
-            check_if_directory_exists(split_data_received_from_client, connection)
+            response_to_client = check_if_directory_exists(split_data_received_from_client)
+            connection.sendall(str(response_to_client))
 
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.OPEN_FILE):
             print "Client requested to open a file..."
-            open_file(split_data_received_from_client, connection)
+            response_to_client = open_file(split_data_received_from_client)
+            connection.sendall(str(response_to_client))
 
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE):
             print "Client has requested to write to a file..."
-            write_to_file(split_data_received_from_client, connection)
+            response_to_client =  write_to_file(split_data_received_from_client)
+            connection.sendall(str(response_to_client))
 
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CREATE_FILE):
             print "Client has requested to create a file..."
-            create_a_new_file(split_data_received_from_client, connection)
+            response_to_client = create_a_new_file(split_data_received_from_client)
+            connection.sendall(str(response_to_client))
 
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.REQUEST_CLIENT_ID):
             print "Client has requested to have an ID assigned to them..."
-            assign_id_to_client(split_data_received_from_client, connection)
+            response_to_client = assign_id_to_client(split_data_received_from_client)
+            connection.sendall(str(response_to_client))
 
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.DELETE_FILE):
             print "Client has requested to delete a file..."
-            delete_file_from_server(split_data_received_from_client, connection)
+            response_to_client = delete_file(split_data_received_from_client)
+            connection.sendall(str(response_to_client))
         else:
             print "ERROR: Invalid request was sent by the client:\nREQUEST: " + request_type
     return connection
