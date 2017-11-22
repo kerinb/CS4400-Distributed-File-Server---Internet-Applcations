@@ -13,7 +13,7 @@ import select
 import socket
 import traceback
 import Queue as queue
-
+import SharedFileFunctions
 
 DEFAULT_PORT_NUMBER = 45678
 MAX_NUM_BYTES = 2048
@@ -65,29 +65,6 @@ def get_server_running_value():
     return SERVER_RUNNING
 
 
-def check_if_directory_exists(message):
-    path = SERVER_FILE_ROOT + message[1]
-    if path.endswith("/") or path == "":
-        full_file_path = SERVER_FILE_ROOT + message[1] + message[2] + FILE_EXTENSION_TXT
-    else:
-        full_file_path = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
-
-    print "Client wants to verify the following directory exists:\n" + full_file_path
-    response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_NOT_FOUND
-    if os.path.exists(path):
-        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_FOUND
-        # we found directory
-        print "The directory exists....\nChecking for file now..."
-        if os.path.isfile(full_file_path):
-            print "File found in directory!"
-            response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST
-        else:
-            print "File not found but directory does exist..."
-        return response_to_client
-    print "Directory not found...."
-    return response_to_client
-
-
 def send_file_to_client(full_file_path, connection):
     f = open(full_file_path)
     file_data_to_send_client = f.read(MAX_NUM_BYTES)
@@ -106,7 +83,7 @@ def open_file(message, connection):
     else:
         full_file_path = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
 
-    response_to_client = check_if_directory_exists(message)
+    response_to_client = SharedFileFunctions.check_if_directory_exists(message[1], message[2], SERVER_FILE_ROOT)
     if response_to_client == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
         print "Requested file client wants to open exists one file directory..."
         connection.sendall(str(response_to_client))
@@ -117,8 +94,37 @@ def open_file(message, connection):
         connection.sendall(str(response_to_client))
 
 
-def write_to_file(message):
-    pass
+def write_to_file(message, connection):
+    # Get the directory
+    response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE_SUCCESSFUL
+    if message[1].endswith("/") or message[1] == "":
+        full_file_path = SERVER_FILE_ROOT + message[1] + message[2] + FILE_EXTENSION_TXT
+    else:
+        full_file_path = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
+    does_dir_exist = SharedFileFunctions.check_if_directory_exists(message[1], message[2],
+                                                                                        SERVER_FILE_ROOT)
+
+    if not does_dir_exist == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
+        create_a_new_file(message)
+    print "Client wants to write to file: " + full_file_path
+    try:
+        # open the file for writing
+        f = open(full_file_path, 'w')
+        print "File opened. Beginning download from client"
+        open_connection = True
+        while open_connection:
+            data = connection.recv(MAX_NUM_BYTES)
+            f.write(data)
+            print "Writing " + str(data + " to file")
+            open_connection = len(data) == MAX_NUM_BYTES
+        print "Write to file completed. Closing file."
+        f.close()
+    except Exception as e:
+        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE_UNSUCCESSFUL
+        print time.ctime(time.time()) + "Exception thrown during server initialisation..."
+        print e.message
+        print traceback.format_exc()
+    return response_to_client
 
 
 # for this function - I assume that a "" file/directory means no create file/directory!
@@ -172,19 +178,18 @@ def delete_file(message):
     return response_to_client
 
 
-def handle_client_request(data_received_from_client, connection):
-    if data_received_from_client == "kill":
+def handle_client_request(message, connection):
+    if message == "kill":
         print "Shutting down file server"
         set_server_running_value(False)
     else:
-        split_data_received_from_client = data_received_from_client.split("\n")
+        split_data_received_from_client = message.split("\n")
         request_type = str(split_data_received_from_client[0])
-        print "ENUM VALUE: " + str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_FILE_EXIST.value)
         print "The Request made by the client is:" + request_type
 
         if request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_FILE_EXIST.value):
             print "Client requested to check if a directory exists..."
-            response_to_client = check_if_directory_exists(split_data_received_from_client)
+            response_to_client = SharedFileFunctions.check_if_directory_exists(message[1], message[2], SERVER_FILE_ROOT)
             connection.sendall(str(response_to_client))
 
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.OPEN_FILE):
@@ -193,7 +198,7 @@ def handle_client_request(data_received_from_client, connection):
 
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE):
             print "Client has requested to write to a file..."
-            response_to_client =  write_to_file(split_data_received_from_client)
+            response_to_client = write_to_file(split_data_received_from_client, connection)
             connection.sendall(str(response_to_client))
 
         elif str(RequestTypeToFileServer.RequestTypeToFileServer.CREATE_FILE) == request_type:
@@ -201,6 +206,7 @@ def handle_client_request(data_received_from_client, connection):
             response_to_client = create_a_new_file(split_data_received_from_client)
             connection.sendall(str(response_to_client))
 
+        # TODO - to implement this later
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.REQUEST_CLIENT_ID):
             print "Client has requested to have an ID assigned to them..."
             response_to_client = assign_id_to_client(split_data_received_from_client)

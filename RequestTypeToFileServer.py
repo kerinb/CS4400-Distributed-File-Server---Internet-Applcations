@@ -36,6 +36,8 @@ class RequestTypeToFileServer(Enum):
     FILE_DELETED = 15
     FILE_NOT_DELETED_DIRECTORY_FOUND = 16
     FILE_NOT_DELETED_DIRECTORY_NOT_FOUND = 17
+    WRITE_TO_FILE_SUCCESSFUL = 18
+    WRITE_TO_FILE_UNSUCCESSFUL = 19
 
     # locking functionality
     # TODO - this will be implemented later when I get around ot locking services
