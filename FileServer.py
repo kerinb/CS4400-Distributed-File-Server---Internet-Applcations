@@ -4,14 +4,12 @@
 #
 
 import sys
-import time
 from threading import Thread
 
 import RequestTypeToFileServer
 import os
 import select
 import socket
-import traceback
 import Queue as queue
 import SharedFileFunctions
 
@@ -21,6 +19,8 @@ HOST = ""
 SERVER_FILE_ROOT = 'Server/'
 IP_ADDRESS = socket.gethostbyname(socket.getfqdn())
 SERVER_RUNNING = True
+list_of_address_connected = []
+num_clients = 0
 FILE_EXTENSION_TXT = ".txt"
 
 
@@ -83,7 +83,7 @@ def open_file(message, connection):
     else:
         full_file_path = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
 
-    response_to_client = SharedFileFunctions.check_if_directory_exists(message[1], message[2], SERVER_FILE_ROOT)
+    response_to_client = check_if_directory_exists(message)
     if response_to_client == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
         print "Requested file client wants to open exists one file directory..."
         connection.sendall(str(response_to_client))
@@ -101,8 +101,7 @@ def write_to_file(message, connection):
         full_file_path = SERVER_FILE_ROOT + message[1] + message[2] + FILE_EXTENSION_TXT
     else:
         full_file_path = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
-    does_dir_exist = SharedFileFunctions.check_if_directory_exists(message[1], message[2],
-                                                                                        SERVER_FILE_ROOT)
+    does_dir_exist = check_if_directory_exists(message)
 
     if not does_dir_exist == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
         create_a_new_file(message)
@@ -121,9 +120,7 @@ def write_to_file(message, connection):
         f.close()
     except Exception as e:
         response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE_UNSUCCESSFUL
-        print time.ctime(time.time()) + "Exception thrown during server initialisation..."
-        print e.message
-        print traceback.format_exc()
+        SharedFileFunctions.handle_errors(e, "Exception thrown during server initialisation...")
     return response_to_client
 
 
@@ -155,8 +152,15 @@ def create_a_new_file(message):
     return response_to_client
 
 
-def assign_id_to_client(message, connection):
-    pass
+def assign_id_to_client(address):
+    global list_of_address_connected, num_clients
+    if not (address in list_of_address_connected):
+        response_to_client = str(RequestTypeToFileServer.RequestTypeToFileServer.RESPONSE_CLIENT_ID_MADE) + "\n" + str(
+            num_clients + 1)
+        list_of_address_connected.append(address)
+    else:
+        response_to_client = str(RequestTypeToFileServer.RequestTypeToFileServer.RESPONSE_CLIENT_ID_NOT_MADE)
+    return response_to_client
 
 
 def delete_file(message):
@@ -178,19 +182,42 @@ def delete_file(message):
     return response_to_client
 
 
-def handle_client_request(message, connection):
+def check_if_directory_exists(message):
+    path = SERVER_FILE_ROOT + message[1]
+    if path.endswith("/") or path == "":
+        full_file_path = SERVER_FILE_ROOT + message[1] + message[2] + FILE_EXTENSION_TXT
+    else:
+        full_file_path = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
+
+    print "Client wants to verify the following directory exists:\n" + full_file_path
+    response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_NOT_FOUND
+    if os.path.exists(path):
+        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_FOUND
+        # we found directory
+        print "The directory exists....\nChecking for file now..."
+        if os.path.isfile(full_file_path):
+            print "File found in directory!"
+            response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST
+        else:
+            print "File not found but directory does exist..."
+    else:
+        print "Directory not found...."
+    return response_to_client
+
+
+def handle_client_request(message, connection, address):
     if message == "kill":
         print "Shutting down file server"
         set_server_running_value(False)
     else:
         split_data_received_from_client = message.split("\n")
         request_type = str(split_data_received_from_client[0])
+        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.ERROR
         print "The Request made by the client is:" + request_type
 
         if request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_FILE_EXIST.value):
             print "Client requested to check if a directory exists..."
-            response_to_client = SharedFileFunctions.check_if_directory_exists(message[1], message[2], SERVER_FILE_ROOT)
-            connection.sendall(str(response_to_client))
+            response_to_client = check_if_directory_exists(split_data_received_from_client)
 
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.OPEN_FILE):
             print "Client requested to open a file..."
@@ -199,25 +226,22 @@ def handle_client_request(message, connection):
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE):
             print "Client has requested to write to a file..."
             response_to_client = write_to_file(split_data_received_from_client, connection)
-            connection.sendall(str(response_to_client))
 
         elif str(RequestTypeToFileServer.RequestTypeToFileServer.CREATE_FILE) == request_type:
             print "Client has requested to create a file..."
             response_to_client = create_a_new_file(split_data_received_from_client)
-            connection.sendall(str(response_to_client))
 
         # TODO - to implement this later
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.REQUEST_CLIENT_ID):
             print "Client has requested to have an ID assigned to them..."
-            response_to_client = assign_id_to_client(split_data_received_from_client)
-            connection.sendall(str(response_to_client))
+            response_to_client = assign_id_to_client(address)
 
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.DELETE_FILE):
             print "Client has requested to delete a file..."
             response_to_client = delete_file(split_data_received_from_client)
-            connection.sendall(str(response_to_client))
         else:
             print "ERROR: Invalid request was sent by the client:\nREQUEST: " + request_type
+        connection.sendall(str(response_to_client))
     return connection
 
 
@@ -231,7 +255,7 @@ def accept_client_connection(connection, address):
             print "No data received..."
             continue
         else:
-            connected_to_file_server = handle_client_request(data_received_from_client, connection)
+            connected_to_file_server = handle_client_request(data_received_from_client, connection, address)
     print "Connection closed..."
     return connected_to_file_server
 
@@ -266,7 +290,7 @@ def main():
             list_of_sockets = [sock]
 
             while get_server_running_value():
-                read, _, _, = select.select(list_of_sockets, [], [], 0.1)
+                read, _, _ = select.select(list_of_sockets, [], [], 0.1)
                 for s in read:
                     if s is sock:
                         connection, address = s.accept()
@@ -276,17 +300,13 @@ def main():
             print "File Server is shutting down...."
 
         except Exception as e:
-            print time.ctime(time.time()) + "Exception thrown during server initialisation..."
-            print e.message
-            print traceback.format_exc()
+            SharedFileFunctions.handle_errors(e, "Exception thrown during server initialisation...")
         finally:
             print "Closing socket...."
             sock.close()
 
     except Exception as e:
-        print time.ctime(time.time()) + "Exception thrown during server initialisation..."
-        print e.message
-        print traceback.format_exc()
+        SharedFileFunctions.handle_errors(e, "Exception thrown during server initialisation...")
 
 
 main()

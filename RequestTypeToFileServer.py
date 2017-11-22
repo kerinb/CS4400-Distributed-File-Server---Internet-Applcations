@@ -24,9 +24,9 @@ class RequestTypeToFileServer(Enum):
     DELETE_FILE = 5
     CREATE_DIRECTORY = 6
     REQUEST_CLIENT_ID = 7
-    RESPONSE_CLIENT_ID = 8
 
     # server response messages to client
+    RESPONSE_CLIENT_ID_MADE = 8
     FILE_DOES_EXIST = 9
     DIRECTORY_FOUND = 10
     DIRECTORY_NOT_FOUND = 11
@@ -38,6 +38,8 @@ class RequestTypeToFileServer(Enum):
     FILE_NOT_DELETED_DIRECTORY_NOT_FOUND = 17
     WRITE_TO_FILE_SUCCESSFUL = 18
     WRITE_TO_FILE_UNSUCCESSFUL = 19
+    RESPONSE_CLIENT_ID_NOT_MADE = 20
+    ERROR = 999
 
     # locking functionality
     # TODO - this will be implemented later when I get around ot locking services
