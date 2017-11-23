@@ -32,7 +32,6 @@ def create_connection_to_file_server(host_name, port_number):
     except Exception as e:
         SharedFileFunctions.handle_errors(e, "ERROR: An error occurred when creating connection to file server...\n")
         sock = null
-
     return sock
 
 
@@ -81,6 +80,15 @@ def decode_response_from_server(response_from_file_server):
     elif response_from_file_server == "19":
         message = "write to given file was unsuccessful..."
 
+    elif response_from_file_server == "20":
+        message = "ID assigned to Client unsuccessful..."
+
+    elif response_from_file_server == "21":
+        message = "Directory created..."
+
+    elif response_from_file_server == "22":
+        message = "Directory not created..."
+
     elif response_from_file_server == "999":
         message = "ERROR: An error occurred when creating a connection to the file server..."
 
@@ -88,15 +96,12 @@ def decode_response_from_server(response_from_file_server):
 
 
 def check_if_file_exists_on_file_server(file_name, file_path, sock):
-    # have to send request to server, who will verify if the file exists.
     message_to_file_server = str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_FILE_EXIST) + "\n" + \
                              file_path + "\n" + file_name
     print "Checking for file: " + file_path + "/" + file_name
     print "Sending " + message_to_file_server + " to file server...."
     sock.sendall(message_to_file_server)
     print "Sent request to file server to confirm if requested file exists in requested path..."
-
-    # response from server
     response_from_file_server = sock.recv(MAX_NUM_BYTES)
     decode_response_from_server(response_from_file_server)
 
@@ -118,7 +123,6 @@ def handle_open_file_response(response_from_file_server, full_file_path, sock):
         print "File: " + full_file_path + " not opened... Doesnt exist..."
 
 
-# TODO - May have to integrate this with some form caching later...
 def open_file_on_server(file_name, file_path, sock):
     print "Opening file: " + file_name + " In: " + file_path
     message = str(RequestTypeToFileServer.RequestTypeToFileServer.OPEN_FILE) + "\n" + file_path + "\n" + file_name
@@ -174,8 +178,6 @@ def create_file_on_server(file_name, file_path, sock):
     print "Sending " + message_to_file_server + " to file server...."
     sock.sendall(message_to_file_server)
     print "Sent request to file server to confirm if requested file exists in requested path..."
-
-    # response from server
     response_from_file_server = sock.recv(MAX_NUM_BYTES)
     decode_response_from_server(response_from_file_server)
 
@@ -194,8 +196,6 @@ def delete_file_from_server(file_name, file_path, sock):
     print "Sending " + message_to_file_server + " to file server...."
     sock.sendall(message_to_file_server)
     print "Sent request to file server to delete file in requested path..."
-
-    # response from server
     response_from_file_server = sock.recv(MAX_NUM_BYTES)
     decode_response_from_server(response_from_file_server)
 
@@ -212,8 +212,6 @@ def create_directory_on_server(file_path, sock):
     print "Sending " + message_to_file_server + " to file server...."
     sock.sendall(message_to_file_server)
     print "Sent request to file server to confirm if requested file exists in requested path..."
-
-    # response from server
     response_from_file_server = sock.recv(MAX_NUM_BYTES)
     decode_response_from_server(response_from_file_server)
 
@@ -241,7 +239,7 @@ def handle_user_request_for_file_server(user_request_for_server, sock, running):
             file_path, file_name = get_file_name_and_path_from_user()
             create_file_on_server(file_name, file_path, sock)
 
-        # TODO - need to implement this
+        # TODO - TEST
         elif user_request_for_server == "3":
             print "User requested to create new directory on server..."
             file_path, file_name = get_file_name_and_path_from_user()
@@ -296,7 +294,6 @@ def check_if_directory_exists(file_name, file_path):
     response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_NOT_FOUND
     if os.path.exists(path):
         response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_FOUND
-        # we found directory
         print "The directory exists....\nChecking for file now..."
         if os.path.isfile(full_file_path):
             print "File found in directory!"
@@ -334,7 +331,6 @@ def create_and_maintain_connection_to_server(host_name, port_number):
 def main():
     running = True
 
-    # keep client alive
     while running:
         make_directory(CLIENT_FILE_ROOT)
         user_request = raw_input("Select an option:\n1: Open connection to file server\nE: Shut down\n")

@@ -39,6 +39,8 @@ class RequestTypeToFileServer(Enum):
     WRITE_TO_FILE_SUCCESSFUL = 18
     WRITE_TO_FILE_UNSUCCESSFUL = 19
     RESPONSE_CLIENT_ID_NOT_MADE = 20
+    DIRECTORY_CREATED = 21
+    DIRECTORY_NOT_CREATED = 22
     ERROR = 999
 
     # locking functionality

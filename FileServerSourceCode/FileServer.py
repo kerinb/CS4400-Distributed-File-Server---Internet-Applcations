@@ -62,7 +62,6 @@ def open_file(message, connection):
 
 
 def write_to_file(message, connection):
-    # Get the directory
     response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE_SUCCESSFUL
     if message[1].endswith("/") or message[1] == "":
         full_file_path = SERVER_FILE_ROOT + message[1] + message[2] + FILE_EXTENSION_TXT
@@ -74,7 +73,6 @@ def write_to_file(message, connection):
         create_a_new_file(message)
     print "Client wants to write to file: " + full_file_path
     try:
-        # open the file for writing
         f = open(full_file_path, 'w')
         print "File opened. Beginning download from client"
         open_connection = True
@@ -91,7 +89,6 @@ def write_to_file(message, connection):
     return response_to_client
 
 
-# for this function - I assume that a "" file/directory means no create file/directory!
 def make_file(file_to_create):
     response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_NOT_MADE
     if not os.path.exists(file_to_create):
@@ -113,9 +110,12 @@ def create_a_new_file(message):
     print "File to create: " + file_to_create
     print "In directory: " + directory
 
-    # will make directory if we need....
-    make_directory(directory)
-    response_to_client = make_file(file_to_create)
+    response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_NOT_MADE
+    if not check_if_directory_exists(message) == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
+        make_directory(directory)
+        response_to_client = make_file(file_to_create)
+    elif check_if_directory_exists(message) == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
+        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_ALREADY_EXISTS
     return response_to_client
 
 
@@ -160,7 +160,6 @@ def check_if_directory_exists(message):
     response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_NOT_FOUND
     if os.path.exists(path):
         response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_FOUND
-        # we found directory
         print "The directory exists....\nChecking for file now..."
         if os.path.isfile(full_file_path):
             print "File found in directory!"
@@ -169,6 +168,16 @@ def check_if_directory_exists(message):
             print "File not found but directory does exist..."
     else:
         print "Directory not found...."
+    return response_to_client
+
+
+def create_new_directory(split_data_received_from_client):
+    response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_NOT_CREATED
+    if not check_if_directory_exists(split_data_received_from_client) == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
+        directory_to_create = SERVER_FILE_ROOT + split_data_received_from_client[1]
+        make_directory(directory_to_create)
+        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_CREATED
+
     return response_to_client
 
 
@@ -196,6 +205,11 @@ def handle_client_request(message, connection, address):
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE):
             print "Client has requested to write to a file..."
             response_to_client = write_to_file(split_data_received_from_client, connection)
+
+        # TODO - TEST
+        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE):
+            print "Client has requested to write to a file..."
+            response_to_client = create_new_directory(split_data_received_from_client)
 
         # TODO - TEST
         elif str(RequestTypeToFileServer.RequestTypeToFileServer.CREATE_FILE) == request_type:
