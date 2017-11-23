@@ -3,12 +3,13 @@
 # @Student Number: 14310166
 #
 
-from pyasn1.compat.octets import null
-
 import os
-import SharedFileFunctions
-import RequestTypeToFileServer
+from pyasn1.compat.octets import null
 from socket import gethostbyname, getfqdn, socket, AF_INET, SOCK_STREAM
+
+import SharedFiles.RequestTypeToFileServer as RequestTypeToFileServer
+
+from SharedFiles import SharedFileFunctions
 
 DEFAULT_PORT_NUMBER = 45678
 DEFAULT_HOST_NAME = gethostbyname(getfqdn())

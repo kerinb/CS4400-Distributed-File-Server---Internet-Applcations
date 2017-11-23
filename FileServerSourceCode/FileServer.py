@@ -3,15 +3,15 @@
 # @Student Number: 14310166
 #
 
-import sys
-from threading import Thread
-
-import RequestTypeToFileServer
 import os
 import select
 import socket
-import Queue as queue
-import SharedFileFunctions
+import sys
+
+import SharedFiles.RequestTypeToFileServer as RequestTypeToFileServer
+import SharedFiles.ThreadHelperFunctions as ThreadHelper
+
+from SharedFiles import SharedFileFunctions
 
 DEFAULT_PORT_NUMBER = 45678
 MAX_NUM_BYTES = 2048
@@ -22,39 +22,6 @@ SERVER_RUNNING = True
 list_of_address_connected = []
 num_clients = 0
 FILE_EXTENSION_TXT = ".txt"
-
-
-class MyThread(Thread):
-    def __init__(self, queue_of_tasks):
-        self.tasks = queue_of_tasks
-        self.on = True
-        Thread.__init__(self)
-        self.start()  # start the thread
-
-    def run(self):
-        while self.on:
-            funcs, args, kargs = self.tasks.get()
-            self.on = funcs(*args, **kargs)
-
-
-class ListOfThreads:
-    def __init__(self, num_of_threads, size_of_queue):
-        self.queue = queue.Queue(size_of_queue)
-        self.num_of_threads = num_of_threads
-        self.threads = []
-        for i in range(0, num_of_threads):
-            self.threads.append(MyThread(self.queue))
-
-    def wait_for_thread_to_complete(self):
-        self.task.join()
-
-    def end_threads(self):
-        for i in range(0, self.num_of_threads):
-            self.add_task(False)
-            self.threads[i].join()
-
-    def add_task(self, task, *args, **kargs):
-        self.queue.put(task, args, kargs)
 
 
 def set_server_running_value(boolean_value):
@@ -287,7 +254,7 @@ def main():
         make_directory(SERVER_FILE_ROOT)
 
         set_server_running_value(True)
-        thread_list = ListOfThreads(10, 10)
+        thread_list = ThreadHelper.ListOfThreads(10, 10)
 
         try:
             print "Listening for requests coming from clients..."
