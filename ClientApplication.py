@@ -2,13 +2,12 @@
 # @Author: Breandan Kerin
 # @Student Number: 14310166
 #
-import time
+
 from pyasn1.compat.octets import null
 
 import os
 import SharedFileFunctions
 import RequestTypeToFileServer
-import traceback
 from socket import gethostbyname, getfqdn, socket, AF_INET, SOCK_STREAM
 
 DEFAULT_PORT_NUMBER = 45678
@@ -133,7 +132,6 @@ def open_file_on_server(file_name, file_path, sock):
     handle_open_file_response(response_from_file_server, full_file_path, sock)
 
 
-# TODO - fi
 def write_file_to_server(file_name, file_path, sock):
     message_to_file_server = str(RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE) + "\n" + file_path + \
                              "\n" + file_name + "\n"
@@ -202,11 +200,21 @@ def delete_file_from_server(file_name, file_path, sock):
 
 
 def kill_file_server(sock):
-    pass
+    sock.sendall("kill")
+    print "Client sent request to kill server..."
 
 
-def create_directory_on_server(file_name, file_path, sock):
-    pass
+def create_directory_on_server(file_path, sock):
+    message_to_file_server = str(RequestTypeToFileServer.RequestTypeToFileServer.CREATE_FILE) + "\n" + \
+                             file_path + "\n"
+    print "Checking for file: " + file_path + "/"
+    print "Sending " + message_to_file_server + " to file server...."
+    sock.sendall(message_to_file_server)
+    print "Sent request to file server to confirm if requested file exists in requested path..."
+
+    # response from server
+    response_from_file_server = sock.recv(MAX_NUM_BYTES)
+    decode_response_from_server(response_from_file_server)
 
 
 def handle_user_request_for_file_server(user_request_for_server, sock, running):
@@ -214,16 +222,19 @@ def handle_user_request_for_file_server(user_request_for_server, sock, running):
         print "User requested to close connection to file server\nclosing connection to file server..."
         running = False
     else:
+        # TODO - TEST
         if user_request_for_server == "0":
             print "User requested to verify file is present on server..."
             file_path, file_name = get_file_name_and_path_from_user()
             check_if_file_exists_on_file_server(file_name, file_path, sock)
 
+        # TODO - TEST
         elif user_request_for_server == "1":
             print "User requested to open file from server..."
             file_path, file_name = get_file_name_and_path_from_user()
             open_file_on_server(file_name, file_path, sock)
 
+        # TODO - TEST
         elif user_request_for_server == "2":
             print "User requested to create a new file on server..."
             file_path, file_name = get_file_name_and_path_from_user()
@@ -233,19 +244,21 @@ def handle_user_request_for_file_server(user_request_for_server, sock, running):
         elif user_request_for_server == "3":
             print "User requested to create new directory on server..."
             file_path, file_name = get_file_name_and_path_from_user()
-            create_directory_on_server(file_name, file_path, sock)
+            create_directory_on_server(file_path, sock)
 
+        # TODO - TEST
         elif user_request_for_server == "4":
             print "User requested to Write file to server..."
             file_path, file_name = get_file_name_and_path_from_user()
             write_file_to_server(file_name, file_path, sock)
 
+        # TODO - TEST
         elif user_request_for_server == "5":
             print "User requested to delete file from server..."
             file_path, file_name = get_file_name_and_path_from_user()
             delete_file_from_server(file_name, file_path, sock)
 
-        # TODO - implement kill_server function
+        # TODO - TEST
         else:
             if user_request_for_server == "K" or user_request_for_server == "k":
                 print "User requested to kill server...\nSHUTTING DOWN SERVER..."
@@ -274,7 +287,7 @@ def get_client_id(sock):
 def check_if_directory_exists(file_name, file_path):
     path = CLIENT_FILE_ROOT + file_path
     if path.endswith("/") or path == "":
-        full_file_path = path +file_name + FILE_EXTENSION_TXT
+        full_file_path = path + file_name + FILE_EXTENSION_TXT
     else:
         full_file_path = path + "/" + file_name + FILE_EXTENSION_TXT
 
@@ -314,10 +327,9 @@ def create_and_maintain_connection_to_server(host_name, port_number):
                 "\nK: kill server\n")
             running = handle_user_request_for_file_server(user_request_for_server, sock, running)
         except Exception as e:
-            SharedFileFunctions.handle_errors(e,"ERROR: An error occurred when handling the user input...\n")
+            SharedFileFunctions.handle_errors(e, "ERROR: An error occurred when handling the user input...\n")
 
 
-# TODO - When I shutdown, message file server to handle accordingly
 def main():
     running = True
 

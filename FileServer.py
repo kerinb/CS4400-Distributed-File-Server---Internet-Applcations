@@ -215,27 +215,32 @@ def handle_client_request(message, connection, address):
         response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.ERROR
         print "The Request made by the client is:" + request_type
 
+        # TODO - TEST
         if request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_FILE_EXIST.value):
             print "Client requested to check if a directory exists..."
             response_to_client = check_if_directory_exists(split_data_received_from_client)
 
+        # TODO - TEST
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.OPEN_FILE):
             print "Client requested to open a file..."
             open_file(split_data_received_from_client, connection)
 
+        # TODO - TEST
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE):
             print "Client has requested to write to a file..."
             response_to_client = write_to_file(split_data_received_from_client, connection)
 
+        # TODO - TEST
         elif str(RequestTypeToFileServer.RequestTypeToFileServer.CREATE_FILE) == request_type:
             print "Client has requested to create a file..."
             response_to_client = create_a_new_file(split_data_received_from_client)
 
-        # TODO - to implement this later
+        # TODO - TEST
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.REQUEST_CLIENT_ID):
             print "Client has requested to have an ID assigned to them..."
             response_to_client = assign_id_to_client(address)
 
+        # TODO - TEST
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.DELETE_FILE):
             print "Client has requested to delete a file..."
             response_to_client = delete_file(split_data_received_from_client)
