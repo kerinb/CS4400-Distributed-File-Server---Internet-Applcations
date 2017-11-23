@@ -93,6 +93,7 @@ def decode_response_from_server(response_from_file_server):
         message = "ERROR: An error occurred when creating a connection to the file server..."
 
     print "RESPONSE FROM FILE SERVER: " + message
+    return response_from_file_server
 
 
 def check_if_file_exists_on_file_server(file_name, file_path, sock):
@@ -180,6 +181,7 @@ def create_file_on_server(file_name, file_path, sock):
     print "Sent request to file server to confirm if requested file exists in requested path..."
     response_from_file_server = sock.recv(MAX_NUM_BYTES)
     decode_response_from_server(response_from_file_server)
+    return response_from_file_server
 
 
 def make_directory(directory_to_create):
