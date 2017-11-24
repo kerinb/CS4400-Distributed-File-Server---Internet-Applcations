@@ -9,6 +9,7 @@ import socket
 import sys
 
 import SharedFiles.RequestTypeToFileServer as RequestTypeToFileServer
+import SharedFiles.ResponseTypeToClient as ResponseTypeToClient
 import SharedFiles.ThreadHelperFunctions as ThreadHelper
 
 from SharedFiles import SharedFileFunctions
@@ -43,34 +44,33 @@ def send_file_to_client(full_file_path, connection):
     f.close()
 
 
-def open_file(message, connection):
+def download_file(message, connection):
     path = message[1]
     if path.endswith("/") or path == "":
         full_file_path = SERVER_FILE_ROOT + message[1] + message[2] + FILE_EXTENSION_TXT
     else:
         full_file_path = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
 
-    response_to_client = check_if_directory_exists(message)
-    if response_to_client == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
+    response_to_client = SharedFileFunctions.check_if_directory_exists(message, SERVER_FILE_ROOT)
+    if response_to_client == ResponseTypeToClient.ResponseTypeToClient.FILE_DOES_EXIST:
         print "Requested file client wants to open exists one file directory..."
         connection.sendall(str(response_to_client))
         send_file_to_client(full_file_path, connection)
     else:
         print "File: " + full_file_path + " ---- Doesnt exist..."
-        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_NOT_EXIST
+        response_to_client = ResponseTypeToClient.ResponseTypeToClient.FILE_DOES_NOT_EXIST
         connection.sendall(str(response_to_client))
 
 
 def write_to_file(message, connection):
-    response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE_SUCCESSFUL
+    response_to_client = ResponseTypeToClient.ResponseTypeToClient.WRITE_TO_FILE_SUCCESSFUL
     if message[1].endswith("/") or message[1] == "":
         full_file_path = SERVER_FILE_ROOT + message[1] + message[2] + FILE_EXTENSION_TXT
     else:
         full_file_path = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
-    does_dir_exist = check_if_directory_exists(message)
-
-    if not does_dir_exist == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
-        create_a_new_file(message)
+    does_dir_exist = SharedFileFunctions.check_if_directory_exists(message, SERVER_FILE_ROOT)
+    if not does_dir_exist == ResponseTypeToClient.ResponseTypeToClient.FILE_DOES_EXIST:
+        SharedFileFunctions.create_a_new_file(message, SERVER_FILE_ROOT)
     print "Client wants to write to file: " + full_file_path
     try:
         f = open(full_file_path, 'w')
@@ -84,54 +84,26 @@ def write_to_file(message, connection):
         print "Write to file completed. Closing file."
         f.close()
     except Exception as e:
-        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE_UNSUCCESSFUL
-        SharedFileFunctions.handle_errors(e, "Exception thrown during server initialisation...")
-    return response_to_client
-
-
-def make_file(file_to_create):
-    response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_NOT_MADE
-    if not os.path.exists(file_to_create):
-        print "Creating file: " + file_to_create + "..."
-        f = open(file_to_create, 'w')
-        f.close()
-        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_MADE
-        print "Created file: " + file_to_create + "..."
-    return response_to_client
-
-
-def create_a_new_file(message):
-    directory = SERVER_FILE_ROOT + message[1]
-    path = message[1]
-    if path.endswith("/") or path == "":
-        file_to_create = SERVER_FILE_ROOT + message[1] + message[2] + FILE_EXTENSION_TXT
-    else:
-        file_to_create = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
-    print "File to create: " + file_to_create
-    print "In directory: " + directory
-
-    response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_NOT_MADE
-    if not check_if_directory_exists(message) == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
-        make_directory(directory)
-        response_to_client = make_file(file_to_create)
-    elif check_if_directory_exists(message) == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
-        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_ALREADY_EXISTS
+        response_to_client = ResponseTypeToClient.ResponseTypeToClient.WRITE_TO_FILE_UNSUCCESSFUL
+        SharedFileFunctions.handle_errors(e.message, "Exception thrown during server initialisation...")
     return response_to_client
 
 
 def assign_id_to_client(address):
     global list_of_address_connected, num_clients
     if not (address in list_of_address_connected):
-        response_to_client = str(RequestTypeToFileServer.RequestTypeToFileServer.RESPONSE_CLIENT_ID_MADE) + "\n" + str(
+        response_to_client = str(ResponseTypeToClient.ResponseTypeToClient.RESPONSE_CLIENT_ID_MADE) + "\n" + str(
             num_clients + 1)
+        print response_to_client
         list_of_address_connected.append(address)
+        print "Client ID number is: " + str(num_clients)
     else:
-        response_to_client = str(RequestTypeToFileServer.RequestTypeToFileServer.RESPONSE_CLIENT_ID_NOT_MADE)
+        response_to_client = str(ResponseTypeToClient.ResponseTypeToClient.RESPONSE_CLIENT_ID_NOT_MADE)
     return response_to_client
 
 
 def delete_file(message):
-    response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_NOT_DELETED_DIRECTORY_NOT_FOUND
+    response_to_client = ResponseTypeToClient.ResponseTypeToClient.FILE_NOT_DELETED_DIRECTORY_NOT_FOUND
     directory = SERVER_FILE_ROOT + message[1]
     file_to_delete = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
     print "file to delete: " + file_to_delete
@@ -140,43 +112,21 @@ def delete_file(message):
     else:
         if not os.path.exists(file_to_delete):
             print "file does not exist is directory..."
-            response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_NOT_DELETED_DIRECTORY_FOUND
+            response_to_client = ResponseTypeToClient.ResponseTypeToClient.FILE_NOT_DELETED_DIRECTORY_FOUND
         else:
             print "file will be deleted..."
             os.remove(file_to_delete)
-            response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_DELETED
+            response_to_client = ResponseTypeToClient.ResponseTypeToClient.FILE_DELETED
             print "file has been deleted..."
     return response_to_client
 
 
-def check_if_directory_exists(message):
-    path = SERVER_FILE_ROOT + message[1]
-    if path.endswith("/") or path == "":
-        full_file_path = SERVER_FILE_ROOT + message[1] + message[2] + FILE_EXTENSION_TXT
-    else:
-        full_file_path = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
-
-    print "Client wants to verify the following directory exists:\n" + full_file_path
-    response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_NOT_FOUND
-    if os.path.exists(path):
-        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_FOUND
-        print "The directory exists....\nChecking for file now..."
-        if os.path.isfile(full_file_path):
-            print "File found in directory!"
-            response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST
-        else:
-            print "File not found but directory does exist..."
-    else:
-        print "Directory not found...."
-    return response_to_client
-
-
 def create_new_directory(split_data_received_from_client):
-    response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_NOT_CREATED
-    if not check_if_directory_exists(split_data_received_from_client) == RequestTypeToFileServer.RequestTypeToFileServer.FILE_DOES_EXIST:
+    response_to_client = ResponseTypeToClient.ResponseTypeToClient.DIRECTORY_NOT_CREATED
+    if not SharedFileFunctions.check_if_directory_exists(split_data_received_from_client, SERVER_FILE_ROOT) == ResponseTypeToClient.ResponseTypeToClient.FILE_DOES_EXIST:
         directory_to_create = SERVER_FILE_ROOT + split_data_received_from_client[1]
-        make_directory(directory_to_create)
-        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.DIRECTORY_CREATED
+        SharedFileFunctions.make_directory(directory_to_create)
+        response_to_client = ResponseTypeToClient.ResponseTypeToClient.DIRECTORY_CREATED
 
     return response_to_client
 
@@ -188,18 +138,13 @@ def handle_client_request(message, connection, address):
     else:
         split_data_received_from_client = message.split("\n")
         request_type = str(split_data_received_from_client[0])
-        response_to_client = RequestTypeToFileServer.RequestTypeToFileServer.ERROR
+        response_to_client = ResponseTypeToClient.ResponseTypeToClient.ERROR
         print "The Request made by the client is:" + request_type
 
         # TODO - TEST
-        if request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_FILE_EXIST.value):
+        if request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_FILE_EXIST):
             print "Client requested to check if a directory exists..."
-            response_to_client = check_if_directory_exists(split_data_received_from_client)
-
-        # TODO - TEST
-        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.OPEN_FILE):
-            print "Client requested to open a file..."
-            open_file(split_data_received_from_client, connection)
+            response_to_client = SharedFileFunctions.check_if_directory_exists(split_data_received_from_client,SERVER_FILE_ROOT)
 
         # TODO - TEST
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE):
@@ -207,14 +152,9 @@ def handle_client_request(message, connection, address):
             response_to_client = write_to_file(split_data_received_from_client, connection)
 
         # TODO - TEST
-        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE):
+        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CREATE_FILE):
             print "Client has requested to write to a file..."
             response_to_client = create_new_directory(split_data_received_from_client)
-
-        # TODO - TEST
-        elif str(RequestTypeToFileServer.RequestTypeToFileServer.CREATE_FILE) == request_type:
-            print "Client has requested to create a file..."
-            response_to_client = create_a_new_file(split_data_received_from_client)
 
         # TODO - TEST
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.REQUEST_CLIENT_ID):
@@ -225,6 +165,12 @@ def handle_client_request(message, connection, address):
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.DELETE_FILE):
             print "Client has requested to delete a file..."
             response_to_client = delete_file(split_data_received_from_client)
+
+        # TODO - TEST
+        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.DOWNLOAD_FILE_FROM_SERVER):
+            print "Client has requested to delete a file..."
+            download_file(split_data_received_from_client, connection)
+
         else:
             print "ERROR: Invalid request was sent by the client:\nREQUEST: " + request_type
         connection.sendall(str(response_to_client))
@@ -246,13 +192,6 @@ def accept_client_connection(connection, address):
     return connected_to_file_server
 
 
-def make_directory(directory_to_create):
-    if not os.path.exists(directory_to_create):
-        print "Creating root directory 'Server/'..."
-        os.makedirs(directory_to_create)
-        print "Created root directory 'Server/'..."
-
-
 def main():
     global IP_ADDRESS, SERVER_FILE_ROOT
     try:
@@ -265,7 +204,7 @@ def main():
         sock.bind((HOST, port_number))
         print "Server is running on:\nPORT: %s\nIP Address: %s", port_number, IP_ADDRESS
 
-        make_directory(SERVER_FILE_ROOT)
+        SharedFileFunctions.make_directory(SERVER_FILE_ROOT)
 
         set_server_running_value(True)
         thread_list = ThreadHelper.ListOfThreads(10, 10)
@@ -296,3 +235,4 @@ def main():
 
 
 main()
+
