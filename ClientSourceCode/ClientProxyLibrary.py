@@ -195,7 +195,6 @@ def download_file_from_server(file_name, file_path, sock):
 
 
 def open_file(file_name, file_path):
-    message = "" + "\n" + file_path + "\n" + file_name
     print "Opening file: " + file_name + " In: " + file_path
     if file_path.endswith("/") or file_path == "":
         full_file_path = CLIENT_FILE_ROOT + file_path + file_name + FILE_EXTENSION_TXT
@@ -203,7 +202,7 @@ def open_file(file_name, file_path):
         full_file_path = CLIENT_FILE_ROOT + file_path + "/" + file_name + FILE_EXTENSION_TXT
 
     if not os.path.exists(full_file_path):
-        SharedFileFunctions.create_a_new_file(message, CLIENT_FILE_ROOT)
+        SharedFileFunctions.create_a_new_file(file_name, file_path, CLIENT_FILE_ROOT)
 
     os.system('gedit "{0}"'.format(full_file_path))
 

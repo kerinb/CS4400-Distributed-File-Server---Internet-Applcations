@@ -14,31 +14,30 @@ def handle_errors(e, message):
     print traceback.format_exc()
 
 
-def create_a_new_file(message, root):
-    directory = root + message[1]
-    path = message[1]
+def create_a_new_file(file_name, file_path, root):
+    directory = root + file_name
+    path = file_path
     if path.endswith("/") or path == "":
-        file_to_create = root + message[1] + message[2] + FILE_EXTENSION_TXT
+        file_to_create = root + file_path + file_name + FILE_EXTENSION_TXT
     else:
-        file_to_create = root + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
+        file_to_create = root + file_path + "/" + file_name + FILE_EXTENSION_TXT
     print "File to create: " + file_to_create
     print "In directory: " + directory
-
     response_to_client = ResponseTypeToClient.ResponseTypeToClient.FILE_NOT_MADE
-    if not check_if_directory_exists(message, root) == ResponseTypeToClient.ResponseTypeToClient.FILE_DOES_EXIST:
+    if not check_if_directory_exists(file_name, file_path, root) == ResponseTypeToClient.ResponseTypeToClient.FILE_DOES_EXIST:
         make_directory(directory)
         response_to_client = make_file(file_to_create)
-    elif check_if_directory_exists(message, root) == ResponseTypeToClient.ResponseTypeToClient.FILE_DOES_EXIST:
+    elif check_if_directory_exists(file_name, file_path, root) == ResponseTypeToClient.ResponseTypeToClient.FILE_DOES_EXIST:
         response_to_client = ResponseTypeToClient.ResponseTypeToClient.FILE_ALREADY_EXISTS
     return response_to_client
 
 
-def check_if_directory_exists(message, root):
-    path = root + message[1]
+def check_if_directory_exists(file_name, file_path,  root):
+    path = root + file_path
     if path.endswith("/") or path == "":
-        full_file_path = root + message[1] + message[2] + FILE_EXTENSION_TXT
+        full_file_path = root + file_path + file_name + FILE_EXTENSION_TXT
     else:
-        full_file_path = root + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
+        full_file_path = root + file_path + "/" + file_name + FILE_EXTENSION_TXT
 
     print "Client wants to verify the following directory exists:\n" + full_file_path
     response_to_client = ResponseTypeToClient.ResponseTypeToClient.DIRECTORY_NOT_FOUND
@@ -57,7 +56,7 @@ def check_if_directory_exists(message, root):
 
 def make_file(file_to_create):
     response_to_client = ResponseTypeToClient.ResponseTypeToClient.FILE_NOT_MADE
-    if not os.path.exists(file_to_create):
+    if os.path.exists(file_to_create):
         print "Creating file: " + file_to_create + "..."
         f = open(file_to_create, 'w')
         f.write(" ")

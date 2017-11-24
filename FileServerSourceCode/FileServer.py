@@ -51,7 +51,7 @@ def download_file(message, connection):
     else:
         full_file_path = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
 
-    response_to_client = SharedFileFunctions.check_if_directory_exists(message, SERVER_FILE_ROOT)
+    response_to_client = SharedFileFunctions.check_if_directory_exists(message[2], message[2], SERVER_FILE_ROOT)
     if response_to_client == ResponseTypeToClient.ResponseTypeToClient.FILE_DOES_EXIST:
         print "Requested file client wants to open exists one file directory..."
         connection.sendall(str(response_to_client))
@@ -68,9 +68,9 @@ def write_to_file(message, connection):
         full_file_path = SERVER_FILE_ROOT + message[1] + message[2] + FILE_EXTENSION_TXT
     else:
         full_file_path = SERVER_FILE_ROOT + message[1] + "/" + message[2] + FILE_EXTENSION_TXT
-    does_dir_exist = SharedFileFunctions.check_if_directory_exists(message, SERVER_FILE_ROOT)
+    does_dir_exist = SharedFileFunctions.check_if_directory_exists(message[2], message[1], SERVER_FILE_ROOT)
     if not does_dir_exist == ResponseTypeToClient.ResponseTypeToClient.FILE_DOES_EXIST:
-        SharedFileFunctions.create_a_new_file(message, SERVER_FILE_ROOT)
+        SharedFileFunctions.create_a_new_file(message[1], message[2], SERVER_FILE_ROOT)
     print "Client wants to write to file: " + full_file_path
     try:
         f = open(full_file_path, 'w')
@@ -123,7 +123,9 @@ def delete_file(message):
 
 def create_new_directory(split_data_received_from_client):
     response_to_client = ResponseTypeToClient.ResponseTypeToClient.DIRECTORY_NOT_CREATED
-    if not SharedFileFunctions.check_if_directory_exists(split_data_received_from_client, SERVER_FILE_ROOT) == ResponseTypeToClient.ResponseTypeToClient.FILE_DOES_EXIST:
+    if not SharedFileFunctions.check_if_directory_exists(split_data_received_from_client[2],
+                                                         split_data_received_from_client[1],
+                                                         SERVER_FILE_ROOT) == ResponseTypeToClient.ResponseTypeToClient.FILE_DOES_EXIST:
         directory_to_create = SERVER_FILE_ROOT + split_data_received_from_client[1]
         SharedFileFunctions.make_directory(directory_to_create)
         response_to_client = ResponseTypeToClient.ResponseTypeToClient.DIRECTORY_CREATED
@@ -144,7 +146,9 @@ def handle_client_request(message, connection, address):
         # TODO - TEST
         if request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_FILE_EXIST):
             print "Client requested to check if a directory exists..."
-            response_to_client = SharedFileFunctions.check_if_directory_exists(split_data_received_from_client,SERVER_FILE_ROOT)
+            response_to_client = SharedFileFunctions.check_if_directory_exists(split_data_received_from_client[2],
+                                                                               split_data_received_from_client[1],
+                                                                               SERVER_FILE_ROOT)
 
         # TODO - TEST
         elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE):
@@ -235,4 +239,3 @@ def main():
 
 
 main()
-
