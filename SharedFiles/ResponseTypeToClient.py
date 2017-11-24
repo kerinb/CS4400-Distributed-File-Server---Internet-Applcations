@@ -11,31 +11,29 @@
 from enum import Enum
 
 
-class RequestTypeToFileServer(Enum):
+class ResponseTypeToClient(Enum):
     def __str__(self):
         return str(self.value)
 
-    # request messages sent by the client
-    CHECK_FOR_FILE_EXIST = 0
-    OPEN_FILE = 1
-    CREATE_FILE = 2
-    READ_FILE = 3
-    WRITE_TO_FILE = 4
-    DELETE_FILE = 5
-    CREATE_DIRECTORY = 6
-    REQUEST_CLIENT_ID = 7
-    RESPONSE_CLIENT_ID = 8
-
     # server response messages to client
-    FILE_DOES_EXIST = 9
-    DIRECTORY_FOUND = 10
-    DIRECTORY_NOT_FOUND = 11
-    FILE_MADE = 12
-    FILE_NOT_MADE = 13
-    FILE_ALREADY_EXISTS = 14
-    FILE_DELETED = 15
-    FILE_NOT_DELETED_DIRECTORY_FOUND = 16
-    FILE_NOT_DELETED_DIRECTORY_NOT_FOUND = 17
+    RESPONSE_CLIENT_ID_MADE = 50
+    FILE_DOES_EXIST = 51
+    DIRECTORY_FOUND = 52
+    DIRECTORY_NOT_FOUND = 53
+    FILE_MADE = 54
+    FILE_NOT_MADE = 55
+    FILE_ALREADY_EXISTS = 56
+    FILE_DELETED = 57
+    FILE_NOT_DELETED_DIRECTORY_FOUND = 58
+    FILE_NOT_DELETED_DIRECTORY_NOT_FOUND = 59
+    WRITE_TO_FILE_SUCCESSFUL = 60
+    WRITE_TO_FILE_UNSUCCESSFUL = 61
+    RESPONSE_CLIENT_ID_NOT_MADE = 62
+    DIRECTORY_CREATED = 63
+    DIRECTORY_NOT_CREATED = 64
+    DOWNLOAD_SUCCESSFUL = 65
+    DOWNLOAD_UNSUCCESSFUL = 66
+    ERROR = 999
 
     # locking functionality
     # TODO - this will be implemented later when I get around ot locking services
