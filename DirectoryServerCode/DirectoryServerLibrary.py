@@ -30,16 +30,29 @@ def get_server_running_value():
     return DIRECTORY_SERVER_RUNNING
 
 
-def assign_id_to_client(address):
-    global list_of_connected_client_addresses, num_clients
-    if not (address in list_of_connected_client_addresses):
-        response_to_client = str(ResponseTypeToClient.ResponseTypeToClient.RESPONSE_CLIENT_ID_MADE) + "\n" + str(
-            num_clients + 1)
+def give_id_if_new(addresses, address, num):
+    if not (address in addresses):
+        num += 1
+        response_to_client = str(ResponseTypeToClient.ResponseTypeToClient.RESPONSE_CLIENT_ID_MADE) + "\n" + num
         print response_to_client
         list_of_connected_client_addresses.append(address)
         print "Client ID number is: " + str(num_clients)
     else:
         response_to_client = str(ResponseTypeToClient.ResponseTypeToClient.RESPONSE_CLIENT_ID_NOT_MADE)
+    return response_to_client, num
+
+
+def assign_id(address, request_type):
+    global list_of_connected_client_addresses, num_clients, list_of_connected_file_server_addresses, num_file_servers
+    if request_type == RequestTypeToFileServer.RequestTypeToFileServer.CLIENT:
+        response_to_client, num = give_id_if_new(list_of_connected_client_addresses, address, num_clients)
+        num_clients = num
+    elif request_type == RequestTypeToFileServer.RequestTypeToFileServer.FILE_SERVER:
+        response_to_client, num = give_id_if_new(list_of_connected_file_server_addresses, address, num_clients)
+        num_file_servers = num
+    else:
+        print "deal with this properly later"
+        response_to_client = str(ResponseTypeToClient.ResponseTypeToClient.ERROR)
     return response_to_client
 
 
@@ -48,25 +61,56 @@ def broadcast_clients_request_to_file_servers(message):
     print "broadcasting clients message to connected file servers\n{0}".format(message)
 
 
-def handle_request(message, client_connection, address):
+def deal_with_request(connection, message, address):
+    if message == "kill":
+        print "Shutting down file server"
+        set_server_running_value(False)
+    else:
+        split_data_received_from_client = message.split("\n")
+        request_type = str(split_data_received_from_client[0])
+        response_to_client = ResponseTypeToClient.ResponseTypeToClient.ERROR
+        print "The Request made by the client is:" + request_type
+
+        if request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CHECK_FOR_FILE_EXIST):
+            print "Client requested to check if a directory exists..."
+
+        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.WRITE_TO_FILE):
+            print "Client has requested to write to a file..."
+            # construct write to file message to broadcast
+
+        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.CREATE_FILE):
+            print "Client has requested to write to a file..."
+            # construct create mesage to broadcast
+
+        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.REQUEST_CLIENT_ID):
+            print "Client has requested to have an ID assigned to them..."
+            response_to_client = assign_id(address, )
+
+        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.DELETE_FILE):
+            print "Client has requested to delete a file..."
+            # construct delete file message to broadcast
+
+        elif request_type == str(RequestTypeToFileServer.RequestTypeToFileServer.DOWNLOAD_FILE_FROM_SERVER):
+            print "Client has requested to delete a file..."
+            # construct downlaod message to broadcast.
+
+        else:
+            print "ERROR: Invalid request was sent by the client:\nREQUEST: " + request_type
+        connection.sendall(str(response_to_client))
+    return connection
+
+
+def handle_request(message, connection, address):
     # Im assuming that a client CANNOT kill the directory server...
     split_data_received_from_client = message.split("\n")
-    request_type_from_client = str(split_data_received_from_client[0])
+    request_source = str(split_data_received_from_client[3])
 
-    response_to_client = ResponseTypeToClient.ResponseTypeToClient.ERROR
-    print "The Request made by the client is:" + request_type_from_client
-    if request_type_from_client == str(RequestTypeToFileServer.RequestTypeToFileServer.REQUEST_CLIENT_ID):
-        print "Client has requested to have an ID assigned to them..."
-        response_to_client = assign_id_to_client(address)
-
-    else:
-        broadcast_clients_request_to_file_servers(message)
-
-    client_connection.sendall(response_to_client)
-    return client_connection
+    print "The Request was made by:" + request_source
+    deal_with_request(connection, split_data_received_from_client, address)
+    return connection
 
 
-def accept_client_connection(connection, address):
+def accept_connection(connection, address):
     print "File Server received a new connection from " + str(address)
     connected_to_file_server = True
     while connected_to_file_server:

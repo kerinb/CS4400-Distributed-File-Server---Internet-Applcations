@@ -39,7 +39,7 @@ def handle_socket_connection(sock, port_number):
             for s in read:
                 if s is sock:
                     connection, address = s.accept()
-                    thread_list.add_task(DSL.accept_client_connection, connection, address)
+                    thread_list.add_task(DSL.accept_connection, connection, address)
 
     except Exception as e:
         SharedFileFunctions.handle_errors(e, "Exception thrown during server initialisation...")

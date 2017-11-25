@@ -23,6 +23,8 @@ class RequestTypeToFileServer(Enum):
     DELETE_FILE = 4
     REQUEST_CLIENT_ID = 5
     DOWNLOAD_FILE_FROM_SERVER = 6
+    CLIENT = 7
+    FILE_SERVER = 8
 
     # locking functionality
     # TODO - this will be implemented later when I get around ot locking services

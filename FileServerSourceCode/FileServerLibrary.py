@@ -181,19 +181,6 @@ def write_to_file(message, connection):
     return response_to_client
 
 
-def assign_id_to_client(address):
-    global list_of_address_connected, num_clients
-    if not (address in list_of_address_connected):
-        response_to_client = str(ResponseTypeToClient.ResponseTypeToClient.RESPONSE_CLIENT_ID_MADE) + "\n" + str(
-            num_clients + 1)
-        print response_to_client
-        list_of_address_connected.append(address)
-        print "Client ID number is: " + str(num_clients)
-    else:
-        response_to_client = str(ResponseTypeToClient.ResponseTypeToClient.RESPONSE_CLIENT_ID_NOT_MADE)
-    return response_to_client
-
-
 def delete_file(message):
     response_to_client = ResponseTypeToClient.ResponseTypeToClient.FILE_NOT_DELETED_DIRECTORY_NOT_FOUND
     directory = SERVER_FILE_ROOT + message[1]
