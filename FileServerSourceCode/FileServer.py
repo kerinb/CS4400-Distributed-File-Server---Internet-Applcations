@@ -20,7 +20,6 @@ IP_ADDRESS = socket.gethostbyname(socket.getfqdn())
 SERVER_RUNNING = True
 list_of_address_connected = []
 num_clients = 0
-FILE_EXTENSION_TXT = ".txt"
 
 
 def main():
