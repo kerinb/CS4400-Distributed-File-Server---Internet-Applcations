@@ -7,7 +7,7 @@ import ClientProxyLibrary as CPL
 
 from socket import gethostbyname, getfqdn
 
-DEFAULT_PORT_NUMBER = 45678
+DEFAULT_PORT_NUMBER = 12348
 DEFAULT_HOST_NAME = gethostbyname(getfqdn())
 CLIENT_FILE_ROOT = 'Client/'
 

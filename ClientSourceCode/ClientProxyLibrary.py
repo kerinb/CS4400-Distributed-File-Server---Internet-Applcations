@@ -10,7 +10,7 @@ import SharedFiles.RequestTypeToFileServer as RequestTypeToFileServer
 import SharedFiles.ResponseTypeToClient as ResponseTypeToClient
 from SharedFiles import SharedFileFunctions
 
-DEFAULT_PORT_NUMBER = 45678
+DEFAULT_PORT_NUMBER = 12345
 DEFAULT_HOST_NAME = gethostbyname(getfqdn())
 MAX_NUM_BYTES = 2048
 CLIENT_ID = ""
@@ -57,6 +57,8 @@ def create_and_maintain_connection_to_server(host_name, port_number):
             running = handle_user_request_for_file_server(user_request_for_server, sock, running)
         except Exception as e:
             SharedFileFunctions.handle_errors(e, "ERROR: An error occurred when handling the user input...\n")
+    print "closing connection to server...."
+    sock.close()
 
 
 def kill_file_server(sock):
@@ -278,7 +280,8 @@ def decode_response_from_server(response_from_file_server):
     elif response_from_file_server == str(ResponseTypeToClient.ResponseTypeToClient.FILE_NOT_DELETED_DIRECTORY_FOUND):
         message = "directory given found but file not found and deleted..."
 
-    elif response_from_file_server == str(ResponseTypeToClient.ResponseTypeToClient.FILE_NOT_DELETED_DIRECTORY_NOT_FOUND):
+    elif response_from_file_server == str(
+            ResponseTypeToClient.ResponseTypeToClient.FILE_NOT_DELETED_DIRECTORY_NOT_FOUND):
         message = "directory given not found... file not deleted..."
 
     elif response_from_file_server == str(ResponseTypeToClient.ResponseTypeToClient.WRITE_TO_FILE_SUCCESSFUL):
@@ -317,49 +320,40 @@ def handle_user_request_for_file_server(user_request_for_server, sock, running):
         print "User requested to close connection to file server\nclosing connection to file server..."
         running = False
     else:
-        # TODO - TEST
         if user_request_for_server == "0":
             print "User requested to verify file is present on server..."
             file_path, file_name = get_file_name_and_path_from_user()
             check_if_file_exists_on_file_server(file_name, file_path, sock)
 
-        # TODO - TEST
         elif user_request_for_server == "1":
             print "User requested to open local file..."
             file_path, file_name = get_file_name_and_path_from_user()
             open_file(file_name, file_path)
 
-        # TODO - TEST
         elif user_request_for_server == "2":
             print "User requested to create a new file on server..."
             file_path, file_name = get_file_name_and_path_from_user()
             create_file_on_server(file_name, file_path, sock)
 
-        # TODO - TEST
         elif user_request_for_server == "3":
             print "User requested to Write file to server..."
             file_path, file_name = get_file_name_and_path_from_user()
             write_file_to_server(file_name, file_path, sock)
 
-        # TODO - TEST
         elif user_request_for_server == "4":
             print "User requested to delete file from server..."
             file_path, file_name = get_file_name_and_path_from_user()
             delete_file_from_server(file_name, file_path, sock)
 
-            # TODO - TEST
         elif user_request_for_server == "7":
             print "User requested to download file from server..."
             file_path, file_name = get_file_name_and_path_from_user()
             download_file_from_server(file_name, file_path, sock)
 
-            # TODO - TEST
         elif user_request_for_server == "5":
             print "User requested to delete file from server..."
             file_path, file_name = get_file_name_and_path_from_user()
             delete_file_from_server(file_name, file_path, sock)
-
-        # TODO - TEST
         else:
             if user_request_for_server == "K" or user_request_for_server == "k":
                 print "User requested to kill server...\nSHUTTING DOWN SERVER..."
