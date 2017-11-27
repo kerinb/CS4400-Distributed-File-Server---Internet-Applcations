@@ -8,15 +8,16 @@ api = Api(app)
 
 class FileServer(Resource):
     def get(self):
-        with open('test.txt', 'r') as file:
-            file_str = file.read()
-
+        with open('test.txt', 'r') as read_from_file:
+            file_str = read_from_file.read()
         return file_str
 
-    def put(self):
+    def post(self):
         edits_to_file = request.form['data']
-        with open('test.txt', 'w') as edit_file:
-            print edit_file.write(edits_to_file + "\n")
+        print edits_to_file
+        with open('test.txt', 'r+') as edit_file:
+            edit_file.write(edits_to_file + "\n")
+            print "adding {} to the file...".format(edits_to_file)
 
 
 api.add_resource(FileServer, '/')
