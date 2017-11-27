@@ -18,7 +18,8 @@ class FileServer(Resource):
         with open('test', 'r+') as edit_file:
             edit_file.write(edits_to_file + "\n")
             print "adding {} to the file...".format(edits_to_file)
-            final_edit = edit_file.read()
+            edit_file.close()
+            final_edit = open('test', 'r').read()
         return {'file': final_edit}
 
 

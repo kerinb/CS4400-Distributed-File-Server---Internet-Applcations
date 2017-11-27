@@ -18,6 +18,8 @@ class DirectoryServer(Resource):
             file_server_id, file_id = LIST_OF_ALL_FILES[file_name]
             file_server_address = ONLINE_FILE_SERVERS[file_server_id] or None
             return {'file_id': file_id, 'file_server_id': file_server_address}
+        else:
+            return {'file_id': None, 'file_server_id': None}
 
 
 api.add_resource(DirectoryServer, '/')

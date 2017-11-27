@@ -8,11 +8,11 @@ HOME_DIRECTORY = "Client/"
 def read_file_from_server():
     file_name = raw_input("Enter the name of the file you want to read...")
 
-    file_server_id, file_id = FSL.find_file_location_if_exists(file_name)
-    if file_server_id is not None:
+    file_server_details, file_id = FSL.find_file_location_if_exists(file_name)
+    if file_server_details is not None and file_id is not None:
 
         response = requests.post(
-            FSL.create_url(file_server_id[0], file_server_id[1]),
+            FSL.create_url(file_server_details[0], file_server_details[1]),
             data={'data': file_name}
         )
 
@@ -21,6 +21,8 @@ def read_file_from_server():
         print "opening text file in gedit"
         open_file.close()
         os.system('gedit "{0}"'.format(file_name))
+    else:
+        print "That file does not exists...."
 
 
 def write_file_to_server():
@@ -29,11 +31,15 @@ def write_file_to_server():
     os.system('gedit "{0}"'.format(file_to_write))
 
     file_server_details, file_id = FSL.find_file_location_if_exists(file_to_write)
-    response = requests.post(
-        FSL.create_url(file_server_details[0], file_server_details[1]),
-        data={'data': file_to_write}
-    )
-    print response.json()['file']
+
+    if file_server_details is not None and file_id is not None:
+        response = requests.post(
+            FSL.create_url(file_server_details[0], file_server_details[1]),
+            data={'data': file_to_write}
+        )
+        print response.json()['file']
+    else:
+        print "handle create file on file server here"
 
 
 def handle_client_request(client_req):
