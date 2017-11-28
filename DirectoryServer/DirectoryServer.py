@@ -29,6 +29,7 @@ def get_file_details_if_exist(file_name):
         file_server_address = ONLINE_FILE_SERVERS[file_server_id]
         print str(file_server_id)
         return file_id, file_server_address, file_server_id
+
     else:
         return None, None, None
 
@@ -40,6 +41,7 @@ def find_least_loaded_file_server():
 
 
 class DirectoryServer(Resource):
+
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('file_name')
@@ -52,8 +54,6 @@ class DirectoryServer(Resource):
         file_id, file_server_details, file_server_id = get_file_details_if_exist(file_name)
         return {'file_id': file_id, 'file_server_details': file_server_details, 'file_server_id': file_server_id}
 
-    # when creating a new file, i need to check with the DS which FS I should use, what the F_ID is and update files
-    # here
     def post(self):
         file_name = self.parser.parse_args()['file_name']
         file_id, file_server_details, file_server_id = get_file_details_if_exist(file_name)
@@ -91,6 +91,9 @@ class CreateNewFileServer(Resource):
         ONLINE_SERVER_BY_PORT[file_server_port] = (file_server_id, file_server_ip)
 
         path += '/' + str(file_server_id)
+        if not os.path.isfile(os.path.join(path)):
+            os.mkdir(path)
+
         num_files = len([f for f in os.listdir(path)
                          if os.path.isfile(os.path.join(path, f))])
         LOAD_ON_FILE_SERVER[file_server_id] = num_files

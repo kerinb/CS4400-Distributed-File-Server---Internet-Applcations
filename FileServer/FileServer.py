@@ -15,6 +15,7 @@ LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
 
 
 class FileServer(Resource):
+
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('file_id')
@@ -25,6 +26,7 @@ class FileServer(Resource):
         file_server_id = self.parser.parse_args()['file_server_id']
         file_name = str(file_server_id) + '/' + SFL.cast_file_id_to_file_name(file_id)
         print file_name
+
         with open(file_name, 'r') as read_from_file:
             file_str = read_from_file.read()
             print file_str
@@ -47,10 +49,13 @@ class FileServer(Resource):
             print "adding {} to the file...".format(edits_to_file)
             edit_file.close()
             final_edit = open(file_name, 'r').read()
-        return {'file': final_edit}
-
+        if os.path.exists(file_name):
+            return {'file': True, 'final_edit': final_edit}
+        else:
+            return {'file': False}
 
 class CreateNewFile(Resource):
+
     def post(self):
         file_id = request.get_json()['file_id']
         print "file_id: " + str(file_id)
