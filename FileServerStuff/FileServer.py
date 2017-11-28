@@ -1,10 +1,16 @@
 import sys
+
+import os
+
+import requests
 from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
 import SharedFileFunctions as SFL
 
 app = Flask(__name__)
 api = Api(app)
+
+DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
 
 
 class FileServer(Resource):
@@ -40,5 +46,17 @@ class FileServer(Resource):
 api.add_resource(FileServer, '/')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=int(sys.argv[1] or 0))
-
+    print "hello world"
+    if len(sys.argv) == 3:
+        if os.environ.get("WERKZEUG_RUN_MAIN") == 'true':
+            print "instantiating a new instance of the file server..."
+            url = SFL.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1],
+                                 "create_new_file_server")
+            print url
+            requests.post(
+                url,
+                json={'new_file_server_ip_address': sys.argv[1], "new_file_server_port_number": sys.argv[2]}
+            )
+        app.run(debug=True, host=sys.argv[1], port=int(sys.argv[2]))
+    else:
+        print "Enter IP and Port Number for this new file server..."

@@ -2,9 +2,7 @@ import os
 import requests
 import SharedFileFunctions as FSL
 
-DIRECTORY_SERVER_IP = '127.0.0.1'
-DIRECTORY_SERVER_PORT_NUMBER = 5000
-HOME_DIRECTORY = "Client/"
+DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
 
 
 def read_file_from_server(file_name):
@@ -72,7 +70,7 @@ def create_new_file(file_name):
         print "file does not exists...\nWill create file now..."
         request_to_server = {'file_name': file_name, 'request': 'create'}
         response = requests.post(
-            FSL.create_url(DIRECTORY_SERVER_IP, DIRECTORY_SERVER_PORT_NUMBER),
+            FSL.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
             params=request_to_server
         )
         print response.json()

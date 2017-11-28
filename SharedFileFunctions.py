@@ -1,8 +1,9 @@
 import requests
 
 
-def create_url(file_server_ip, file_server_port_number):
-    return "http://{0}:{1}".format(file_server_ip, file_server_port_number)
+def create_url(file_server_ip, file_server_port_number, end_point=''):
+    return "http://{0}:{1}/{2}".format(file_server_ip, file_server_port_number, end_point)#]
+
 
 
 def find_file_location_if_exists(file_name):
