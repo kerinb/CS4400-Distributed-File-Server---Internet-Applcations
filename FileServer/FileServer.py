@@ -11,6 +11,7 @@ app = Flask(__name__)
 api = Api(app)
 
 DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
+LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
 
 
 class FileServer(Resource):

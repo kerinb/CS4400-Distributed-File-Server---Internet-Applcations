@@ -18,6 +18,8 @@ LIST_OF_ALL_FILES_BY_ID = {}
 # file_server_port = file_server_id
 ONLINE_SERVER_BY_PORT = {}
 
+LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
+
 
 def get_file_details_if_exist(file_name):
     if file_name in LIST_OF_ALL_FILES_BY_NAME.keys():
