@@ -31,7 +31,6 @@ def get_file_details_if_exist(file_name):
         file_server_address = ONLINE_FILE_SERVERS[file_server_id]
         print str(file_server_id)
         return file_id, file_server_address, file_server_id
-
     else:
         return None, None, None
 
@@ -51,7 +50,6 @@ class DirectoryServer(Resource):
     def get(self):
         file_name = self.parser.parse_args()['file_name']
         print 'file name:' + file_name
-        get_file_details_if_exist(file_name)
         file_id, file_server_details, file_server_id = get_file_details_if_exist(file_name)
         return {'file_id': file_id, 'file_server_details': file_server_details, 'file_server_id': file_server_id}
 

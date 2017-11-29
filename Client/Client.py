@@ -13,12 +13,13 @@ def main():
 
         client_req = raw_input(
             "select from list below to operate on files..."
-            "\n1: Open file to read in gedit from server"
-            "\n2: Write to file"
-            "\n3: Verify that a file exists"
-            "\n4: Create a new file on a file server\n"
+            "\n1: Read file from server"
+            "\n2: Write to file to server"
+            "\n3: Open file/Verify it exists"
+            "\n4: Create a new file on a file server"
+            "\nE: Exit"
         )
-        handle_client_request(client_req, client_id)
+        client_running = handle_client_request(client_req, client_id)
 
 
 main()
