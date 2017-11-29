@@ -18,6 +18,8 @@ LIST_OF_ALL_FILES_BY_ID = {}
 # file_server_port = file_server_id
 ONLINE_SERVER_BY_PORT = {}
 
+NUM_CLIENTS = 0
+
 LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
 
 
@@ -41,7 +43,6 @@ def find_least_loaded_file_server():
 
 
 class DirectoryServer(Resource):
-
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('file_name')
@@ -93,6 +94,10 @@ class CreateNewFileServer(Resource):
         path += '/' + str(file_server_id)
         print "creating folder: " + path
         if os.path.exists(path):
+            filelist = [f for f in os.listdir(path)]
+            print filelist
+            for f in filelist:
+                os.remove(os.path.join(path, f))
             os.rmdir(path)
             os.mkdir(path)
             print "made dir for server"
@@ -103,7 +108,7 @@ class CreateNewFileServer(Resource):
               "FILE_SERVER_IP='{0}'\n" \
               "FILE_SERVER_PORT='{1}'\n" \
               "FILE_SERVER_ID='{2}'\n".format(
-               file_server_ip, file_server_port, file_server_id
+            file_server_ip, file_server_port, file_server_id
         )
         print "----------------------------------\n" \
               "hello world from file server {}...\n" \
@@ -115,8 +120,22 @@ class CreateNewFileServer(Resource):
         return {'file_server_id': file_server_id}
 
 
+class CreateNewClient(Resource):
+    def get(self):
+        global NUM_CLIENTS
+
+        request_from_client = request.get_json()['client_id']
+        if request_from_client == 'Y':
+            resp = {'client_id': NUM_CLIENTS}
+            NUM_CLIENTS += 1
+            return resp
+        else:
+            return{'client_id': None}
+
+
 api.add_resource(DirectoryServer, '/')
 api.add_resource(CreateNewFileServer, '/create_new_file_server')
+api.add_resource(CreateNewClient, '/create_new_client')
 
 if __name__ == '__main__':
     app.run(debug=True)

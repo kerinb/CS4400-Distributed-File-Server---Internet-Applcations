@@ -1,14 +1,11 @@
-from ClientApi import handle_client_request
+from ClientApi import handle_client_request, get_client_num
 
 DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
 LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
-NUM_CLIENTS = 0
 
 
 def main():
-    global NUM_CLIENTS
-    NUM_CLIENTS += NUM_CLIENTS
-    client_id = NUM_CLIENTS
+    client_id = get_client_num()
     print "My client ID is {}".format(client_id)
     client_running = True
     while client_running:

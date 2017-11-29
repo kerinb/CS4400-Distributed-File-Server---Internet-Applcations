@@ -29,7 +29,7 @@ class LockingServer(Resource):
             return {'lock': True}
 
     # remove lock on file
-    def remove(self):
+    def delete(self):
         file_id = request.get_json()['file_id']
         file_server_id = request.get_json()['file_server_id']
         client_id = request.get_json()['client_id']

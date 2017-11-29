@@ -4,28 +4,37 @@ import SharedFileFunctions as FSL
 
 DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
 LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
-NUM_CLIENTS = 0
+
+
+def get_client_num():
+    response_from_create_client_id = requests.get(
+        FSL.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1], 'create_new_client'),
+        json={'client_id': 'Y'}
+    )
+    if response_from_create_client_id is not None:
+        return response_from_create_client_id.json()['client_id']
 
 
 def read_file_from_server(file_name, client_id):
     file_server_details, file_id, file_server_id = FSL.find_file_location_if_exists(file_name)
 
     if file_server_details is not None and file_id is not None:
-        print "Trying to obtain a lock on file{} for client{}...".format(file_name, client_id)
-        response_from_locking_server = requests.get(
-            FSL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
-            json={'client_id': client_id, 'file_id': file_id,
-                  'file_server_id': file_server_id}
-        )
-        if response_from_locking_server.json()['lock']:
 
-            user_request = raw_input("Do you want to sync changes with the file server?\nEnter Y for yes and N for no.")
+        user_request = raw_input("Do you want to sync changes with the file server?\nEnter Y for yes and N for no.")
 
-            if user_request == 'y' or user_request == 'Y':
-                write_file_to_server(file_name, client_id)
-                print "Syncing changes with file server..."
+        if user_request == 'y' or user_request == 'Y':
+            write_file_to_server(file_name, client_id)
+            print "Syncing changes with file server..."
 
-            elif user_request == 'n' or user_request == 'N':
+        elif user_request == 'n' or user_request == 'N':
+            print "Trying to obtain a lock on file{} for client{}...".format(file_name, client_id)
+            response_from_locking_server = requests.get(
+                FSL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
+                json={'client_id': client_id, 'file_id': file_id,
+                      'file_server_id': file_server_id}
+            )
+            if response_from_locking_server.json()['lock']:
+
                 print "not syncing changes with file server..."
 
                 response_from_directory_server = requests.get(
@@ -39,20 +48,22 @@ def read_file_from_server(file_name, client_id):
 
                 print "opening text file in gedit"
                 os.system('gedit "{0}"'.format(file_name + '.txt'))
-                print "handle locking here... unlock here when implemented...\n"
-                response_from_locking_server = requests.get(
+                print "unlocking client{} from file .\n".format(client_id, file_id)
+                response_from_locking_server = requests.delete(
                     FSL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
                     json={'client_id': client_id, 'file_id': file_id,
                           'file_server_id': file_server_id}
                 )
+                print "unlock response: {}".format(response_from_locking_server)
+
                 if response_from_locking_server:
                     print "The lock has been removed from file {} buy client {}".format(file_name, client_id)
 
-            else:
-                print "ERROR: Invalid request....\n"
+            elif not response_from_locking_server.json()['lock']:
+                print 'The file is locked on another - Try again later...'
 
-        elif not response_from_locking_server.json()['lock']:
-            print 'The file is locked on another - Try again later...'
+        else:
+            print "ERROR: Invalid request....\n"
 
     else:
         print "That file does not exists....\n"
@@ -61,34 +72,51 @@ def read_file_from_server(file_name, client_id):
 def write_file_to_server(file_to_write, client_id):
     # find out if file is present on file server....
     file_server_details, file_id, file_server_id = FSL.find_file_location_if_exists(file_to_write)
-    response_from_locking_server = 0
-
-    if file_server_details is not None and file_id is not None:
-        os.system('gedit "{0}"'.format(file_to_write + '.txt'))
-        data_to_send = open(file_to_write + '.txt', 'r').read()
-        print data_to_send
-
-        file_server_details, file_id, file_server_id = FSL.find_file_location_if_exists(file_to_write)
-        print "server details: " + str(file_server_details)
-        print "file id: " + str(file_id)
-        print "file server id: " + str(file_server_id)
+    print "Trying to obtain a lock on file{} for client{}...".format(file_to_write, client_id)
+    response_from_locking_server = requests.get(
+        FSL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
+        json={'client_id': client_id, 'file_id': file_id,
+              'file_server_id': file_server_id}
+    )
+    if response_from_locking_server.json()['lock']:
 
         if file_server_details is not None and file_id is not None:
-            response = requests.post(
-                FSL.create_url(file_server_details[0], file_server_details[1]),
-                json={'file_id': file_id, 'data': data_to_send, 'server_id': file_server_id}
+            os.system('gedit "{0}"'.format(file_to_write + '.txt'))
+            data_to_send = open(file_to_write + '.txt', 'r').read()
+            print data_to_send
 
+            file_server_details, file_id, file_server_id = FSL.find_file_location_if_exists(file_to_write)
+            print "server details: " + str(file_server_details)
+            print "file id: " + str(file_id)
+            print "file server id: " + str(file_server_id)
+
+            if file_server_details is not None and file_id is not None:
+                response = requests.post(
+                    FSL.create_url(file_server_details[0], file_server_details[1]),
+                    json={'file_id': file_id, 'data': data_to_send, 'server_id': file_server_id}
+
+                )
+                print response.json()
+
+            else:
+                print "handle create file on file server here"
+
+            print "unlocking client{} from file .\n".format(client_id, file_id)
+            response_from_locking_server = requests.delete(
+                FSL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
+                json={'client_id': client_id, 'file_id': file_id,
+                      'file_server_id': file_server_id}
             )
-            print response.json()
+            print "unlock response: {}".format(response_from_locking_server)
+
+            if response_from_locking_server:
+                print "The lock has been removed from file {} buy client {}".format(file_to_write, client_id)
 
         else:
-            print "handle create file on file server here"
+            print "ERROR: file you entered does not exist..."
 
-        print "handle locking here... unlock here when implemented...\n"
-        response_from_locking_server = 0
-
-    else:
-        print "ERROR: file you entered does not exist..."
+    elif not response_from_locking_server.json()['lock']:
+        print 'The file is locked on another - Try again later...'
 
 
 # TODO - refactor this c0de - it doesnt call the directory server just a function in it file!
