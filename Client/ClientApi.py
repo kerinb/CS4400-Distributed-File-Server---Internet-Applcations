@@ -22,51 +22,23 @@ def read_file_from_server(file_name, client_id):
 
         user_request = raw_input("Do you want to sync changes with the file server?\nEnter Y for yes and N for no.")
 
+        # I only want to lock the file when I am writing to it...
         if user_request == 'y' or user_request == 'Y':
             write_file_to_server(file_name, client_id)
             print "Syncing changes with file server..."
 
-        elif user_request == 'n' or user_request == 'N':
-            print "Trying to obtain a lock on file{} for client{}...".format(file_name, client_id)
-            response_from_locking_server = requests.get(
-                FSL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
-                json={'client_id': client_id, 'file_id': file_id,
-                      'file_server_id': file_server_id}
-            )
-            if response_from_locking_server.json()['lock']:
+        print "not syncing changes with file server..."
+        response_from_directory_server = requests.get(
+            FSL.create_url(file_server_details[0], file_server_details[1]),
+            params={'file_id': file_id, 'file_server_id': file_server_id}
+        )
 
-                print "not syncing changes with file server..."
-
-                response_from_directory_server = requests.get(
-                    FSL.create_url(file_server_details[0], file_server_details[1]),
-                    params={'file_id': file_id, 'file_server_id': file_server_id}
-                )
-
-                open_file = open(file_name + '.txt', 'w')
-                open_file.write(response_from_directory_server.json()['file_str'])
-                open_file.close()
-
-                print "opening text file in gedit"
-                os.system('gedit "{0}"'.format(file_name + '.txt'))
-                print "unlocking client{} from file .\n".format(client_id, file_id)
-                response_from_locking_server = requests.delete(
-                    FSL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
-                    json={'client_id': client_id, 'file_id': file_id,
-                          'file_server_id': file_server_id}
-                )
-                print "unlock response: {}".format(response_from_locking_server)
-
-                if response_from_locking_server:
-                    print "The lock has been removed from file {} buy client {}".format(file_name, client_id)
-
-            elif not response_from_locking_server.json()['lock']:
-                print 'The file is locked on another - Try again later...'
-
-        else:
-            print "ERROR: Invalid request....\n"
+        open_file = open(file_name + '.txt', 'w')
+        open_file.write(response_from_directory_server.json()['file_str'])
+        open_file.close()
 
     else:
-        print "That file does not exists....\n"
+        print "file does not exist..."
 
 
 def write_file_to_server(file_to_write, client_id):
