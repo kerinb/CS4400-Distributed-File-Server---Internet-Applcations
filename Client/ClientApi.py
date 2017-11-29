@@ -11,29 +11,49 @@ def read_file_from_server(file_name, client_id):
     file_server_details, file_id, file_server_id = FSL.find_file_location_if_exists(file_name)
 
     if file_server_details is not None and file_id is not None:
-        user_request = raw_input("Do you want to sync changes with the file server?\nEnter Y for yes and N for no...")
+        print "Trying to obtain a lock on file{} for client{}...".format(file_name, client_id)
+        response_from_locking_server = requests.get(
+            FSL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
+            json={'client_id': client_id, 'file_id': file_id,
+                  'file_server_id': file_server_id}
+        )
+        if response_from_locking_server.json()['lock']:
 
-        if user_request == 'y' or user_request == 'Y':
-            write_file_to_server(file_name, client_id)
-            print "Syncing changes with file server..."
+            user_request = raw_input("Do you want to sync changes with the file server?\nEnter Y for yes and N for no.")
 
-        elif user_request == 'n' or user_request == 'N':
-            print "not syncing changes with file server..."
+            if user_request == 'y' or user_request == 'Y':
+                write_file_to_server(file_name, client_id)
+                print "Syncing changes with file server..."
 
-            response = requests.get(
-                FSL.create_url(file_server_details[0], file_server_details[1]),
-                params= {'file_id': file_id, 'file_server_id': file_server_id}
-            )
+            elif user_request == 'n' or user_request == 'N':
+                print "not syncing changes with file server..."
 
-            open_file = open(file_name+'.txt', 'w')
-            open_file.write(response.json()['file_str'])
-            open_file.close()
+                response_from_directory_server = requests.get(
+                    FSL.create_url(file_server_details[0], file_server_details[1]),
+                    params={'file_id': file_id, 'file_server_id': file_server_id}
+                )
 
-            print "opening text file in gedit"
-            os.system('gedit "{0}"'.format(file_name+'.txt'))
-            print "handle locking here... unlock here when implemented...\n"
-        else:
-            print "ERROR: Invalid request....\n"
+                open_file = open(file_name + '.txt', 'w')
+                open_file.write(response_from_directory_server.json()['file_str'])
+                open_file.close()
+
+                print "opening text file in gedit"
+                os.system('gedit "{0}"'.format(file_name + '.txt'))
+                print "handle locking here... unlock here when implemented...\n"
+                response_from_locking_server = requests.get(
+                    FSL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
+                    json={'client_id': client_id, 'file_id': file_id,
+                          'file_server_id': file_server_id}
+                )
+                if response_from_locking_server:
+                    print "The lock has been removed from file {} buy client {}".format(file_name, client_id)
+
+            else:
+                print "ERROR: Invalid request....\n"
+
+        elif not response_from_locking_server.json()['lock']:
+            print 'The file is locked on another - Try again later...'
+
     else:
         print "That file does not exists....\n"
 
@@ -41,10 +61,11 @@ def read_file_from_server(file_name, client_id):
 def write_file_to_server(file_to_write, client_id):
     # find out if file is present on file server....
     file_server_details, file_id, file_server_id = FSL.find_file_location_if_exists(file_to_write)
+    response_from_locking_server = 0
 
     if file_server_details is not None and file_id is not None:
-        os.system('gedit "{0}"'.format(file_to_write+'.txt'))
-        data_to_send = open(file_to_write+'.txt', 'r').read()
+        os.system('gedit "{0}"'.format(file_to_write + '.txt'))
+        data_to_send = open(file_to_write + '.txt', 'r').read()
         print data_to_send
 
         file_server_details, file_id, file_server_id = FSL.find_file_location_if_exists(file_to_write)
@@ -64,15 +85,17 @@ def write_file_to_server(file_to_write, client_id):
             print "handle create file on file server here"
 
         print "handle locking here... unlock here when implemented...\n"
+        response_from_locking_server = 0
 
     else:
         print "ERROR: file you entered does not exist..."
 
 
+# TODO - refactor this c0de - it doesnt call the directory server just a function in it file!
 def verify_file_exists(file_name, client_id):
     file_server_details, file_id, file_server_id = FSL.find_file_location_if_exists(file_name)
     if file_server_details is not None:
-        print "file {0} requested by client {1} is on the file server: 'http://{2}:{3}\nAnd has id:{4}\n".\
+        print "file {0} requested by client {1} is on the file server: 'http://{2}:{3}\nAnd has id:{4}\n". \
             format(file_name, client_id, file_server_details[0], file_server_details[1], file_id)
     else:
         print "The file {0} requested by client{1} does not exist on any of our servers...\n".format(file_name,
@@ -88,7 +111,7 @@ def create_new_file(file_name, client_id):
         params=request_to_server
     )
     print response.json()
-    if response.json()['file'] is True:
+    if response.json()['message'] is True:
         print "file {0} has been created for client{1}".format(file_name, client_id)
 
 

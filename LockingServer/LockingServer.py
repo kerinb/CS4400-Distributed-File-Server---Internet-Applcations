@@ -11,10 +11,11 @@ FILES_WITH_LOCK = {}
 
 class LockingServer(Resource):
 
+    # get lock on file
     def get(self):
         file_id = request.get_json()['file_id']
-        file_server_id = request.get_json()['file_id']
-        client_id = request.get_json()['file_id']
+        file_server_id = request.get_json()['file_server_id']
+        client_id = request.get_json()['client_id']
         print "client {0} has requested a lock on file {1}" \
               " on file server{2}".format(client_id, file_id, file_server_id)
         key = str(file_server_id) + '/' + str(file_id)
@@ -27,10 +28,11 @@ class LockingServer(Resource):
             FILES_WITH_LOCK[key] = client_id
             return {'lock': True}
 
+    # remove lock on file
     def remove(self):
         file_id = request.get_json()['file_id']
-        file_server_id = request.get_json()['file_id']
-        client_id = request.get_json()['file_id']
+        file_server_id = request.get_json()['file_server_id']
+        client_id = request.get_json()['client_id']
         print "client {0} has requested its lock on file {1}" \
               " on file server{2} to be removed".format(client_id, file_id, file_server_id)
 
@@ -47,7 +49,7 @@ class LockingServer(Resource):
             return {'message': 'client does not have lock on this file'}
 
 
-api.add_resource(LockingServer, '/<int:file_id>')
+api.add_resource(LockingServer, '/')
 
 if __name__ == '__main__':
     app.run(debug=True, port=12345)

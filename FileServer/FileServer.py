@@ -68,8 +68,11 @@ class CreateNewFile(Resource):
         f.write('Write your text in here...')
         f.close()
         f.close()
-        print "created file..."
-        return {'file_id': file_id, 'message': 'created'}
+        if os.path.exists(full_file_path):
+            print "created file..."
+            return {'file': True}
+        else:
+            return {'file': False}
 
 
 api.add_resource(FileServer, '/')
@@ -87,9 +90,10 @@ if __name__ == '__main__':
                 json={'new_file_server_ip_address': sys.argv[1], "new_file_server_port_number": sys.argv[2],
                       'path': path}
             )
-            if not os.path.exists(str(response.json()['file_Server_id'])+'/'):
-                print 'making directory for this machine....'
-                os.mkdir(str(response.json()['file_Server_id'])+'/')
+            print path
+            if not os.path.exists((path+'/'+str(response.json()['file_server_id']))):
+                os.mkdir(path+'/'+str(response.json()['file_server_id']))
+                print "made dir for server"
         app.run(debug=True, host=sys.argv[1], port=int(sys.argv[2]))
     else:
         print "Enter IP and Port Number for this new file server..."

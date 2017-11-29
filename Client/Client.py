@@ -9,7 +9,7 @@ def main():
     global NUM_CLIENTS
     NUM_CLIENTS += NUM_CLIENTS
     client_id = NUM_CLIENTS
-
+    print "My client ID is {}".format(client_id)
     client_running = True
     while client_running:
         print "in client main!!!"

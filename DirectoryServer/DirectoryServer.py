@@ -59,7 +59,7 @@ class DirectoryServer(Resource):
         file_id, file_server_details, file_server_id = get_file_details_if_exist(file_name)
         if file_name in LIST_OF_ALL_FILES_BY_NAME:
             return {'file_id': file_id, 'file_server_id': file_server_details,
-                    'message': 'N'}
+                    'message': False}
         print "creating a file..."
 
         file_id = len(LIST_OF_ALL_FILES_BY_NAME)
@@ -76,7 +76,7 @@ class DirectoryServer(Resource):
         print response.json()
         # return Y to let client now file is created
         return {'file_id': file_id, 'file_server_id': file_server_id,
-                'message': 'Y', 'server_details': ONLINE_FILE_SERVERS[file_server_id]}
+                'message': True, 'server_details': ONLINE_FILE_SERVERS[file_server_id]}
 
 
 class CreateNewFileServer(Resource):
@@ -91,11 +91,13 @@ class CreateNewFileServer(Resource):
         ONLINE_SERVER_BY_PORT[file_server_port] = (file_server_id, file_server_ip)
 
         path += '/' + str(file_server_id)
-        if not os.path.isfile(os.path.join(path)):
+        print "creating folder: " + path
+        if os.path.exists(path):
+            os.rmdir(path)
             os.mkdir(path)
+            print "made dir for server"
 
-        num_files = len([f for f in os.listdir(path)
-                         if os.path.isfile(os.path.join(path, f))])
+        num_files = 0
         LOAD_ON_FILE_SERVER[file_server_id] = num_files
         print "Just created a new file server...\n" \
               "FILE_SERVER_IP='{0}'\n" \
@@ -110,7 +112,7 @@ class CreateNewFileServer(Resource):
               "Information on the current state of the directory server...\n" \
               "Number of File Servers currently online: {0}\n" \
               "Load on the file servers: {1}".format(ONLINE_FILE_SERVERS, LOAD_ON_FILE_SERVER)
-        return {'file_Server_id': file_server_id}
+        return {'file_server_id': file_server_id}
 
 
 api.add_resource(DirectoryServer, '/')
