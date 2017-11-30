@@ -7,9 +7,10 @@ LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
 
 
 def get_client_num():
+    path = os.getcwd()
     response_from_create_client_id = requests.get(
         FSL.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1], 'create_new_client'),
-        json={'client_id': 'Y'}
+        json={'client_id': 'Y', 'path': path}
     )
     if response_from_create_client_id is not None:
         return response_from_create_client_id.json()['client_id']
@@ -145,3 +146,4 @@ def handle_client_request(client_req, client_id):
         print "client{} requested to leave...".format(client_id)
         return False
     return True
+

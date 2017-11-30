@@ -13,12 +13,11 @@ ONLINE_FILE_SERVERS = {}
 LOAD_ON_FILE_SERVER = {}
 # file_name = file_server_id: file_id
 LIST_OF_ALL_FILES_BY_NAME = {}
-# file_name = file_server_id: file_name
-LIST_OF_ALL_FILES_BY_ID = {}
 # file_server_port = file_server_id
 ONLINE_SERVER_BY_PORT = {}
-
+# number of clients attached to directory
 NUM_CLIENTS = 0
+
 
 LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
 
@@ -64,7 +63,6 @@ class DirectoryServer(Resource):
         file_id = len(LIST_OF_ALL_FILES_BY_NAME)
         file_server_id = find_least_loaded_file_server()
         LIST_OF_ALL_FILES_BY_NAME[file_name] = (file_id, file_server_id)
-        LIST_OF_ALL_FILES_BY_ID[file_id] = (file_server_id, file_name)
         ip = ONLINE_FILE_SERVERS[file_server_id][0]
         port = ONLINE_FILE_SERVERS[file_server_id][1]
 
@@ -89,32 +87,27 @@ class CreateNewFileServer(Resource):
         ONLINE_FILE_SERVERS[file_server_id] = (file_server_ip, file_server_port)
         ONLINE_SERVER_BY_PORT[file_server_port] = (file_server_id, file_server_ip)
 
-        path += '/' + str(file_server_id)
+        path += '/' + 'Server' + str(file_server_id)
         print "creating folder: " + path
-        if os.path.exists(path):
-            filelist = [f for f in os.listdir(path)]
-            print filelist
-            for f in filelist:
-                os.remove(os.path.join(path, f))
-            os.rmdir(path)
+        if not os.path.exists(path):
             os.mkdir(path)
             print "made dir for server"
-
-        num_files = 0
+            num_files = 0
+        else:
+            print "folder already exists - getting listing in folder...."
+            num_files = len([f for f in os.listdir(path)])
+        print num_files
         LOAD_ON_FILE_SERVER[file_server_id] = num_files
         print "Just created a new file server...\n" \
-              "FILE_SERVER_IP='{0}'\n" \
-              "FILE_SERVER_PORT='{1}'\n" \
-              "FILE_SERVER_ID='{2}'\n".format(
-            file_server_ip, file_server_port, file_server_id
+              "FILE_SERVER_IP='{0}'\nFILE_SERVER_PORT='{1}'\nFILE_SERVER_ID='{2}'\n".format(
+               file_server_ip, file_server_port, file_server_id
         )
         print "----------------------------------\n" \
               "hello world from file server {}...\n" \
               "----------------------------------\n".format(file_server_id)
         print "\n\n" \
-              "Information on the current state of the directory server...\n" \
-              "Number of File Servers currently online: {0}\n" \
-              "Load on the file servers: {1}".format(ONLINE_FILE_SERVERS, LOAD_ON_FILE_SERVER)
+              "Information on the current state of the directory server...\nNumber of File Servers currently online: " \
+              "{0}\nLoad on the file servers: {1}".format(ONLINE_FILE_SERVERS, LOAD_ON_FILE_SERVER)
         return {'file_server_id': file_server_id}
 
 
@@ -123,8 +116,12 @@ class CreateNewClient(Resource):
         global NUM_CLIENTS
 
         request_from_client = request.get_json()['client_id']
+        path = request.get_json()['path']
         if request_from_client == 'Y':
             resp = {'client_id': NUM_CLIENTS}
+            if not os.path.exists((path + '/' + str(NUM_CLIENTS))):
+                os.mkdir(path + '/' + 'Server' + str(NUM_CLIENTS))
+                print "made dir for client{}".format(NUM_CLIENTS)
             NUM_CLIENTS += 1
             return resp
         else:

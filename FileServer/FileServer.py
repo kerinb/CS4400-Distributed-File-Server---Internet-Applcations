@@ -15,7 +15,6 @@ LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
 
 
 class FileServer(Resource):
-
     def __init__(self):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('file_id')
@@ -54,8 +53,8 @@ class FileServer(Resource):
         else:
             return {'file': False}
 
-class CreateNewFile(Resource):
 
+class CreateNewFile(Resource):
     def post(self):
         file_id = request.get_json()['file_id']
         print "file_id: " + str(file_id)
@@ -63,7 +62,7 @@ class CreateNewFile(Resource):
         print "edits: " + edits_to_file
         file_name = SFL.cast_file_id_to_file_name(file_id)
         print "file name: " + file_name
-        full_file_path = str(request.get_json()['server_id'])+'/'+file_name
+        full_file_path = str(request.get_json()['server_id']) + '/' + file_name
         f = open(full_file_path, 'w')
         f.write('Write your text in here...')
         f.close()
@@ -91,8 +90,8 @@ if __name__ == '__main__':
                       'path': path}
             )
             print path
-            if not os.path.exists((path+'/'+str(response.json()['file_server_id']))):
-                os.mkdir(path+'/'+str(response.json()['file_server_id']))
+            if not os.path.exists((path + '/' + 'Server' + str(response.json()['file_server_id']))):
+                os.mkdir(path + '/' + 'Server' + str(response.json()['file_server_id']))
                 print "made dir for server"
         app.run(debug=True, host=sys.argv[1], port=int(sys.argv[2]))
     else:
