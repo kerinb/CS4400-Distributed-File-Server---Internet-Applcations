@@ -1,5 +1,4 @@
 from ClientApi import handle_client_request, get_client_num, create_cache_for_client
-import Cache
 
 DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
 LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
