@@ -1,6 +1,7 @@
 import os
 import requests
 import SharedFileFunctions as FSL
+import Cache
 
 DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
 LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
@@ -16,6 +17,7 @@ def get_client_num():
         return response_from_create_client_id.json()['client_id']
 
 
+# TODO - I want to clean this up, and refactor this some what
 def read_file_from_server(file_name, client_id):
     response_from_directory_server = requests.get(
         FSL.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
@@ -50,6 +52,7 @@ def read_file_from_server(file_name, client_id):
         print "file does not exist..."
 
 
+# TODO - I want to clean this up, and refactor this some what
 def write_file_to_server(file_name, client_id):
     # find out if file is present on file server....
     file_server_details, file_id, file_server_id = FSL.find_file_location_if_exists(file_name)
@@ -110,6 +113,13 @@ def verify_file_exists(file_name, client_id):
     return file_server_details, file_id
 
 
+def create_cache_for_client(client_id, path):
+    cache = Cache.Cache()
+    cache.initialise_cache(path, client_id)
+    print "new cache set up for client{}".format(client_id)
+    return cache
+
+
 def create_new_file(file_name, client_id):
     print "Creating a new file {0} for the client{1}\n".format(file_name, client_id)
     f = open('Client' + str(client_id) + '/' + file_name, 'w')
@@ -124,7 +134,7 @@ def create_new_file(file_name, client_id):
         print "file {0} has been created for client{1}".format(file_name, client_id)
 
 
-def handle_client_request(client_req, client_id):
+def handle_client_request(client_req, client_id, cache):
     if client_req == '1':
         print "client{} requested to open file to read in gedit from server....".format(client_id)
         file_name = raw_input("Enter the name of the file you want to read...\n")
@@ -149,4 +159,3 @@ def handle_client_request(client_req, client_id):
         print "client{} requested to leave...".format(client_id)
         return False
     return True
-
