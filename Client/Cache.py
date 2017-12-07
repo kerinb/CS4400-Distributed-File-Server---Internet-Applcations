@@ -30,30 +30,27 @@ class Cache:
         else:
             print "clients cache already exists"
 
-    def add_cache_entry(self, cache_file, version):
+    def add_cache_entry(self, cache_file_name, version):
         print "adding data to cache"
 
-        if cache_file not in self.cache_entries:
+        if cache_file_name not in self.cache_entries:
             print "file is not in cache -add it"
             key = self.number_of_cache_entries + 1
             if len(self.cache_entries) is self.MAX_SIZE_OF_CACHE:
                 print "cache is full - must use LRU function"
                 key = self.remove_file_LRU_policy()
             print "add file to cache here..."
-            self.cache_entries[key] = {'file': cache_file, 'version': version}
+            self.cache_entries[key] = {'file': cache_file_name, 'version': version}
             self.number_of_cache_entries += 1
             return
 
         # file is in cache
-        key = 0
-        for i in range(self.number_of_cache_entries):
-            if self.cache_entries[i].json['file'] is cache_file:
-                key = i
+        key = self.get_key_to_file(cache_file_name)
 
         if version is not self.cache_entries[key].json['version']:
             print "updating data in the cache"
             print "version is not up to date - need to up date cache"
-            self.cache_entries[key] = {'file': cache_file, 'version': version}
+            self.cache_entries[key] = {'file': cache_file_name, 'version': version}
             print "updated file in cache"
         print "file is up to date - dont need to do anything..."
 
@@ -70,8 +67,21 @@ class Cache:
         print "emptying out the cache"
         self.cache_entries = {}
 
-    def get_cache_entry(self):
+    def get_cache_entry(self, cache_file_name):
         print "getting entry from cache"
+        key = self.get_key_to_file(cache_file_name)
+        return self.data_from_cache(key)
+
+    def get_key_to_file(self, cache_file_name):
+        for i in range(self.number_of_cache_entries):
+            if self.cache_entries[i].json['file'] is cache_file_name:
+                return i
+
+    def data_from_cache(self, key):
+        f = open(self.cache_entries[key].json('file'), 'r')
+        data = f.read()
+        return {'file': self.cache_entries[key].json('file'), 'version': self.cache_entries[key].json('version'),
+                'data': data}
 
 
 if __name__ == "__main__":
