@@ -47,11 +47,12 @@ class Cache:
         # file is in cache
         key = self.get_key_to_file(cache_file_name)
 
-        if version is not self.cache_entries[key].json['version']:
+        if version > self.cache_entries[key].json['version']:
             print "updating data in the cache"
             print "version is not up to date - need to up date cache"
             self.cache_entries[key] = {'file': cache_file_name, 'version': version}
             print "updated file in cache"
+            return
         print "file is up to date - dont need to do anything..."
 
     def remove_file_LRU_policy(self):
@@ -76,6 +77,7 @@ class Cache:
         for i in range(self.number_of_cache_entries):
             if self.cache_entries[i].json['file'] is cache_file_name:
                 return i
+        return None
 
     def data_from_cache(self, key):
         f = open(self.cache_entries[key].json('file'), 'r')
