@@ -23,14 +23,17 @@ LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
 
 
 def get_file_details_if_exist(file_name):
+    print LIST_OF_ALL_FILES_BY_NAME
     if file_name in LIST_OF_ALL_FILES_BY_NAME.keys():
         print "file name: " + str(file_name)
-        file_id, file_server_id = LIST_OF_ALL_FILES_BY_NAME[str(file_name)]
+        file_server_id, file_id = LIST_OF_ALL_FILES_BY_NAME[file_name]
+        print 'file ' + str(file_id) + 'server ' + str(file_server_id)
         print ONLINE_FILE_SERVERS
         file_server_address = ONLINE_FILE_SERVERS[file_server_id]
         print str(file_server_id)
         return file_id, file_server_address, file_server_id
     else:
+        print 'hi'
         return None, None, None
 
 
@@ -68,7 +71,7 @@ class DirectoryServer(Resource):
 
         response = requests.post(
             SFL.create_url(ip, port, 'create_new_file'),
-            json={'file_id': file_id, 'data': '', 'server_id': file_server_id}
+            json={'file_id': file_id, 'file_name': file_name, 'data': '', 'server_id': file_server_id}
         )
         print response.json()
         # return Y to let client now file is created
@@ -86,16 +89,20 @@ class CreateNewFileServer(Resource):
         file_server_id = len(ONLINE_FILE_SERVERS)
         ONLINE_FILE_SERVERS[file_server_id] = (file_server_ip, file_server_port)
         ONLINE_SERVER_BY_PORT[file_server_port] = (file_server_id, file_server_ip)
+        num_files = 0
 
         path += '/' + 'Server' + str(file_server_id)
         print "creating folder: " + path
         if not os.path.exists(path):
             os.mkdir(path)
             print "made dir for server"
-            num_files = 0
         else:
             print "folder already exists - getting listing in folder...."
-            num_files = len([f for f in os.listdir(path)])
+            for f in os.listdir(path):
+                num_files += 1
+                print f
+                LIST_OF_ALL_FILES_BY_NAME[f.replace(" ", "").rstrip(f[-5:])] = {file_server_id, f}
+
         print num_files
         LOAD_ON_FILE_SERVER[file_server_id] = num_files
         print "Just created a new file server...\n" \
@@ -119,8 +126,8 @@ class CreateNewClient(Resource):
         path = request.get_json()['path']
         if request_from_client == 'Y':
             resp = {'client_id': NUM_CLIENTS}
-            if not os.path.exists((path + '/' + str(NUM_CLIENTS))):
-                os.mkdir(path + '/' + 'Server' + str(NUM_CLIENTS))
+            if os.path.exists((path + '/' + str(NUM_CLIENTS))):
+                os.mkdir(path + '/' + 'Client' + str(NUM_CLIENTS)+'.txt')
                 print "made dir for client{}".format(NUM_CLIENTS)
             NUM_CLIENTS += 1
             return resp

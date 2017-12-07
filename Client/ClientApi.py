@@ -50,10 +50,10 @@ def read_file_from_server(file_name, client_id):
         print "file does not exist..."
 
 
-def write_file_to_server(file_to_write, client_id):
+def write_file_to_server(file_name, client_id):
     # find out if file is present on file server....
-    file_server_details, file_id, file_server_id = FSL.find_file_location_if_exists(file_to_write)
-    print "Trying to obtain a lock on file {} for client {}...".format(file_to_write, client_id)
+    file_server_details, file_id, file_server_id = FSL.find_file_location_if_exists(file_name)
+    print "Trying to obtain a lock on file {} for client {}...".format(file_name, client_id)
 
     response_from_locking_server = requests.get(
         FSL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
@@ -64,14 +64,15 @@ def write_file_to_server(file_to_write, client_id):
     if response_from_locking_server.json()['lock']:
 
         if file_server_details is not None and file_id is not None:
-            os.system('gedit "{0}"'.format(file_to_write + '.txt'))
-            data_to_send = open(file_to_write + '.txt', 'r').read()
+            os.system('gedit "{0}"'.format(file_name + '.txt'))
+            data_to_send = open(file_name + '.txt', 'r').read()
             print data_to_send
+            print file_id
 
             if file_server_details is not None and file_id is not None:
                 response = requests.post(
                     FSL.create_url(file_server_details[0], file_server_details[1]),
-                    json={'file_id': file_id, 'data': data_to_send, 'server_id': file_server_id}
+                    json={'file_id': file_id, 'data': data_to_send, 'server_id': file_server_id, 'file_name': file_name}
 
                 )
                 print response.json()
@@ -88,7 +89,7 @@ def write_file_to_server(file_to_write, client_id):
             print "unlock response: {}".format(response_from_locking_server)
 
             if response_from_locking_server:
-                print "The lock has been removed from file {} buy client {}".format(file_to_write, client_id)
+                print "The lock has been removed from file {} buy client {}".format(file_name, client_id)
 
         else:
             print "ERROR: file you entered does not exist..."
@@ -111,6 +112,8 @@ def verify_file_exists(file_name, client_id):
 
 def create_new_file(file_name, client_id):
     print "Creating a new file {0} for the client{1}\n".format(file_name, client_id)
+    f = open('Client' + str(client_id) + '/' + file_name, 'w')
+    f.close()
     request_to_server = {'file_name': file_name}
     response = requests.post(
         FSL.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
