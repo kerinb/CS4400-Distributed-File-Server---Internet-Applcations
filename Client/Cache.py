@@ -9,7 +9,7 @@ how do I determine a key?
 
 
 class Cache:
-    client_id = 0
+    client_id = None
     client_cache_dir = ""
     MAX_SIZE_OF_CACHE = 10  # Number of files in cache
     cache_entries = []  # array of json tuples -> cache_entries[key] = [{'file': file, 'version': version}]
@@ -61,7 +61,10 @@ class Cache:
         print "file is up to date - dont need to do anything..."
 
     def update_data_in_cache(self, cache_file_name, updated_data):
-        pass
+        open_file = open(cache_file_name, 'w')
+        open_file.write(updated_data)
+        open_file.close()
+        self.set_version_of_file(cache_file_name)
 
     def remove_file_LRU_policy(self):
         print "removing a file via LRU"
@@ -79,7 +82,10 @@ class Cache:
     def get_cache_entry(self, cache_file_name):
         print "getting entry from cache"
         key = self.get_key_to_file(cache_file_name)
-        return self.data_from_cache(key)
+        if key is not None:
+            return self.data_from_cache(key)
+        else:
+            return None
 
     def get_key_to_file(self, cache_file_name):
         for i in range(self.number_of_cache_entries):
@@ -98,6 +104,11 @@ class Cache:
         data = f.read()
         return {'file': self.cache_entries[key].json('file'), 'version': self.cache_entries[key].json('version'),
                 'data': data}
+
+    def set_version_of_file(self, cache_file_name):
+        for i in range(self.number_of_cache_entries):
+            if self.cache_entries[i].json['file'] is cache_file_name:
+                self.cache_entries[i].json['version'] = self.cache_entries[i].json['version']+1
 
 
 if __name__ == "__main__":
