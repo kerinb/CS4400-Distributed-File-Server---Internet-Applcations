@@ -46,11 +46,14 @@ def read_file_from_server(file_name, cache):
                 )
                 print response_from_directory_server.json()
 
-        open_file = open(file_to_read + '.txt', 'w')
-        open_file.close()
-        os.system('gedit "{0}"'.format(file_to_read + '.txt'))
-        data_to_cache = open(file_to_read + '.txt', 'r').read()
-        cache.add_cache_entry(file_name, cache.get_version_of_file(file_name), data_to_cache)
+            open_file = open(file_to_read + '.txt', 'w')
+            open_file.close()
+            os.system('gedit "{0}"'.format(file_to_read + '.txt'))
+            data_to_cache = open(file_to_read + '.txt', 'r').read()
+            cache.add_cache_entry(file_name, cache.get_version_of_file(file_name), data_to_cache)
+        else:
+            print "ERROR: file {} does not exists in cache or on the server....\n Please enter a valid file name...".\
+                format(file_name)
     except Exception as e:
         print "ERROR: occurred when reading file from server:{}".format(e.message)
 
