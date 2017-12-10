@@ -11,12 +11,14 @@ api = Api(app)
 ONLINE_FILE_SERVERS = {}
 # file_server_id = number of files on file server
 LOAD_ON_FILE_SERVER = {}
-# file_name = file_server_id: file_id
+# file_name = file_server_id: file_id: file_version
 LIST_OF_ALL_FILES_BY_NAME = {}
 # file_server_port = file_server_id
 ONLINE_SERVER_BY_PORT = {}
 # number of clients attached to directory
 NUM_CLIENTS = 0
+# LIST_OF_FILE_VERSIONS[file_id] = {}
+LIST_OF_FILE_VERSIONS = {}
 
 
 LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
@@ -26,15 +28,15 @@ def get_file_details_if_exist(file_name):
     print LIST_OF_ALL_FILES_BY_NAME
     if file_name in LIST_OF_ALL_FILES_BY_NAME.keys():
         print "file name: " + str(file_name)
-        file_server_id, file_id = LIST_OF_ALL_FILES_BY_NAME[file_name]
+        file_id, file_server_id = LIST_OF_ALL_FILES_BY_NAME[file_name]
         print 'file ' + str(file_id) + 'server ' + str(file_server_id)
         print ONLINE_FILE_SERVERS
         file_server_address = ONLINE_FILE_SERVERS[file_server_id]
+        version = LIST_OF_FILE_VERSIONS[file_name]
         print str(file_server_id)
-        return file_id, file_server_address, file_server_id
+        return file_id, file_server_address, file_server_id, version
     else:
-        print 'hi'
-        return None, None, None
+        return None, None, None, None
 
 
 def find_least_loaded_file_server():
@@ -52,19 +54,21 @@ class DirectoryServer(Resource):
     def get(self):
         file_name = self.parser.parse_args()['file_name']
         print 'file name:' + file_name
-        file_id, file_server_details, file_server_id = get_file_details_if_exist(file_name)
-        return {'file_id': file_id, 'file_server_details': file_server_details, 'file_server_id': file_server_id}
+        file_id, file_server_details, file_server_id, version = get_file_details_if_exist(file_name)
+        return {'file_id': file_id, 'file_server_details': file_server_details, 'file_server_id': file_server_id,
+                'version': version}
 
     def post(self):
         file_name = self.parser.parse_args()['file_name']
-        file_id, file_server_details, file_server_id = get_file_details_if_exist(file_name)
+        file_id, file_server_details, file_server_id, version = get_file_details_if_exist(file_name)
         if file_name in LIST_OF_ALL_FILES_BY_NAME:
             return {'file_id': file_id, 'file_server_id': file_server_details,
-                    'message': False}
+                    'message': False, 'version': version}
         print "creating a file..."
 
         file_id = len(LIST_OF_ALL_FILES_BY_NAME)
         file_server_id = find_least_loaded_file_server()
+        LIST_OF_FILE_VERSIONS[file_name] = version
         LIST_OF_ALL_FILES_BY_NAME[file_name] = (file_id, file_server_id)
         ip = ONLINE_FILE_SERVERS[file_server_id][0]
         port = ONLINE_FILE_SERVERS[file_server_id][1]

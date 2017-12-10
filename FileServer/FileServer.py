@@ -33,11 +33,12 @@ class FileServer(Resource):
 
     def post(self):
         file_id = request.get_json()['file_id']
+        file_name = request.get_json()['file_name']
         file_server_id = request.get_json()['server_id']
         print "file_id: " + str(file_id)
         edits_to_file = request.get_json()['data']
         print "edits: " + edits_to_file
-        file_name = str(file_server_id) + '/' + SFL.cast_file_id_to_file_name(file_id)
+        file_name = 'Server' + str(file_server_id) + '/' + SFL.cast_file_id_to_file_name(file_name+str(file_id))
         print "file name: " + file_name
         f = open(file_name, 'w')
         f.close()

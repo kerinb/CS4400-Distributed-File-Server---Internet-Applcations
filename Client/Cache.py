@@ -1,6 +1,5 @@
 import os
-
-import itertools
+import datetime
 
 """
 I want the cache to store a file and its version, and i need to determine a key for it. 
@@ -8,12 +7,19 @@ how do I determine a key?
 """
 
 
+def find_LRU_key(cache_entries):
+    min_key = 0
+    for i in range(1, len(cache_entries)):
+        if cache_entries[i]['version'] < min:
+            min_key = i
+    return min_key
+
+
 class Cache:
     client_id = None
     client_cache_dir = ""
-    MAX_SIZE_OF_CACHE = 10  # Number of files in cache
+    MAX_SIZE_OF_CACHE = 3  # Number of files in cache
     cache_entries = []  # array of json tuples -> cache_entries[key] = [{'file': file, 'version': version}]
-    number_of_cache_entries = 0
 
     def __init__(self, client_id):
         print "in init bruv..."
@@ -22,7 +28,8 @@ class Cache:
         self.client_cache_dir = "Cache{}/".format(client_id)
         if not os.path.exists(self.client_cache_dir):
             os.mkdir(self.client_cache_dir)
-        self.cache_entries = dict(itertools.izip(xrange(self.MAX_SIZE_OF_CACHE), itertools.repeat(None)))
+        self.cache_entries = {}
+        self.number_of_cache_entries = -1
 
     def initialise_cache(self, client_cache_path, client_id):
         print "initialising cache"
@@ -42,17 +49,16 @@ class Cache:
             key = self.number_of_cache_entries + 1
             if len(self.cache_entries) is self.MAX_SIZE_OF_CACHE:
                 print "cache is full - must use LRU function"
-                key = self.remove_file_LRU_policy()
+                key = self.replace_file_LRU_policy()
             print "add file to cache here..."
             self.cache_entries[key] = {'file': cache_file_name, 'version': version}
             self.number_of_cache_entries += 1
             self.update_data_in_cache(cache_file_name, updated_data)
-            return
 
         # file is in cache
         key = self.get_key_to_file(cache_file_name)
 
-        if version > self.cache_entries[key].json['version']:
+        if version > self.cache_entries[key]['version']:
             print "updating data in the cache"
             print "version is not up to date - need to up date cache"
             self.cache_entries[key] = {'file': cache_file_name, 'version': version}
@@ -66,13 +72,16 @@ class Cache:
         open_file.close()
         self.set_version_of_file(cache_file_name)
 
-    def remove_file_LRU_policy(self):
-        print "removing a file via LRU"
+    def replace_file_LRU_policy(self):
+        print "getting key to replace a file via LRU"
         # find the last accessed value - i think this may be max not min!
-        key = max(self.cache_entries.values())
-        del self.cache_entries[key]
-        self.number_of_cache_entries -= 1
-        print "removed file from cache"
+        key = find_LRU_key(self.cache_entries)
+        dic = self.cache_entries[key]
+        name = dic['file']
+        dic.pop('version', 0)
+        dic.pop('file', 0)
+        file_to_delete_from_cache = 'Cache{}/{}.txt'.format(self.client_id, name)
+        os.remove(file_to_delete_from_cache)
         return key
 
     def empty_out_the_cache(self):
@@ -88,27 +97,31 @@ class Cache:
             return None
 
     def get_key_to_file(self, cache_file_name):
+        if len(self.cache_entries) is 0:
+            return -1
         for i in range(self.number_of_cache_entries):
-            if self.cache_entries[i].json['file'] is cache_file_name:
+            if self.cache_entries[i]['file'] is cache_file_name:
                 return i
-        return None
+        return 0
 
     def get_version_of_file(self, cache_file_name):
         for i in range(self.number_of_cache_entries):
-            if self.cache_entries[i].json['file'] is cache_file_name:
-                return self.cache_entries[i].json['version']
-        return None
+            if self.cache_entries[i]['file'] is cache_file_name:
+                return self.cache_entries[i]['version'], self.cache_entries[i]['file'], cache_file_name
+        return 0, 0, 0
 
     def data_from_cache(self, key):
-        f = open(self.cache_entries[key].json('file'), 'r')
+        f = open(self.cache_entries[key]['file'], 'r')
         data = f.read()
-        return {'file': self.cache_entries[key].json('file'), 'version': self.cache_entries[key].json('version'),
+        return {'file': self.cache_entries[key]['file'], 'version': self.cache_entries[key]['version'],
                 'data': data}
 
     def set_version_of_file(self, cache_file_name):
+        print str(self.cache_entries)
         for i in range(self.number_of_cache_entries):
-            if self.cache_entries[i].json['file'] is cache_file_name:
-                self.cache_entries[i].json['version'] = self.cache_entries[i].json['version']+1
+            if self.cache_entries[i]['file'] is cache_file_name:
+                # the new version is this time now!
+                self.cache_entries[i]['version'] = str(datetime.datetime.now())
 
 
 if __name__ == "__main__":
