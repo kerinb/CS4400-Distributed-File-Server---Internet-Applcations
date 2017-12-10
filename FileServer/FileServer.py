@@ -38,7 +38,7 @@ class FileServer(Resource):
         print "file_id: " + str(file_id)
         edits_to_file = request.get_json()['data']
         print "edits: " + edits_to_file
-        file_name = 'Server' + str(file_server_id) + '/' + SFL.cast_file_id_to_file_name(file_name+str(file_id))
+        file_name = 'Server' + str(file_server_id) + '/' + SFL.cast_file_id_to_file_name(file_id)
         print "file name: " + file_name
         f = open(file_name, 'w')
         f.close()
@@ -58,13 +58,10 @@ class FileServer(Resource):
 class CreateNewFile(Resource):
     def post(self):
         file_id = request.get_json()['file_id']
-        file_name = request.get_json()['file_name']
         print "file_id: " + str(file_id)
         edits_to_file = request.get_json()['data']
         print "edits: " + edits_to_file
-        file_name += SFL.cast_file_id_to_file_name(file_id)
-        print "file name: " + file_name
-        full_file_path = 'Server' + str(request.get_json()['server_id']) + '/' + file_name
+        full_file_path = 'Server' + str(request.get_json()['server_id']) + '/' + str(file_id) + '.txt'
         f = open(full_file_path, 'w')
         f.write('Write your text in here...')
         f.close()

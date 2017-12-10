@@ -6,15 +6,19 @@ This project was completed as part of my module, CS4400 - Internet Applications 
 The aim of this project was to implement a Distributed file server, as either an NFS or AFS style server. It also had
 to have other features implemented, a minimum of four had to be chosen from the following list:
 
-*    <b>Distributed Transparent File Access - Aither AFS or NFS </b>
+*    Distributed Transparent File Access - Either AFS or NFS
 *    Security Service
-*    <b>Directory Service</b>
+*    Directory Service
 *    Replication
-*    <b>Caching</b>
+*    Caching
 *    Transactions
-*    <b>Lock Service</b>
+*    Lock Service
 
-<i> Points highlighted above were the features implemented in this project.</i>
+The features I have implemented are:
+1. Distributed Transparent File Access - FS
+2. Directory Service
+3. Caching
+4. Lock Service
 
 ### Languages, Dependancies etc ###
 * Python 2.7. 
@@ -26,24 +30,23 @@ to have other features implemented, a minimum of four had to be chosen from the 
 
 ## Distributed Transparent File Access ##
 This system was modelled after the NFS system. the system can support multiple clients and multiple servers.For this, a
- client was written up that made use of a client API, which had the 'brains' of the clients abstracted from the client.
+client was written up that made use of a client API, which had the 'brains' of the clients abstracted from the client.
 A file server was also implemented as a RESTful server that could be written to and read from by a client. 
 
 ### Client and Client Library ###
 The file being run here is the client.py. It acts as an interface to the clientApi.py file. Here, the client is able to
- make decisionsfor files stored locally and on a file server. Using the CLiantApi, the client is able to:
+make decisions for files stored locally and on a file server. Using the CliantApi, the client is able to:
 *	read from the file server, write to the file server, 
-*	Create a file that is stored locally and is also pushed to the server containing the data <i>"First Time file is
- opened.... Edit me!"</i>.
+*	Create a file that is stored locally and is also pushed to the server containing the data "First Time file is
+ opened.... Edit me!".
 
 ### File Server ### 
 The file servers are implemented as a flat-file style system, where the files are stored in the file server without any
-deeper directories used. The file server directories are named using the file servers 'file_server_id' appened to 'Server
-'; ie, 'Server0/' etcThe file servers directory is created when the file server starts up, and is perscribed a
+deeper directories used. The file server directories are named using the file servers 'file_server_id' appended to 'Server
+'; ie, 'Server0/' etcThe file servers directory is created when the file server starts up, and is prescribed a
 file_server_id by the directory server.
 
-All files stored on a file server follow a simple name & numerical naming system such as hi0.txt -
-TODO - I want to change this to go back to my original implementation of just numerical values.
+All files stored on a file server follow a simple name & numerical naming system such as 0.txt -
 
 The server accepts get() and post() requests from all clients that are connected and know the servers IP and port
 number. It can be reached at any available host address and port specified by the user, which are provided as sys.argv[0] and sys.argv[1].
@@ -74,27 +77,3 @@ Each client has its own cache implemented as a caching object. The cache is impl
 where each file is stored with a time-date stamp, and the file that was accessed least recently is evicted.
 Everytime a file is read from a file server, it is added to the cache, with its time date stamp. 
 
-
-### What is this repository for? ###
-
-
-
-### How do I get set up? ###
-
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
