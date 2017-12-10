@@ -45,7 +45,6 @@ class Cache:
             print "ERROR: occurred when initialising the cache with:\n{}".format(e.message)
 
     def add_cache_entry(self, cache_file_name, version, updated_data):
-        try:
             print "adding data to cache"
             if cache_file_name not in self.cache_entries:
                 print "file is not in cache -add it"
@@ -68,8 +67,6 @@ class Cache:
                 print "updated file in cache"
                 return
             print "file is up to date - dont need to do anything..."
-        except Exception as e:
-            print "ERROR: occurred when adding an entry to the cache\n{}".format(e.message)
 
     def update_data_in_cache(self, cache_file_name, updated_data):
         try:
@@ -115,23 +112,20 @@ class Cache:
 
     def get_key_to_file(self, cache_file_name):
         try:
-            if len(self.cache_entries) is 0:
-                return -1
+            if self.number_of_cache_entries is 0 or len(self.cache_entries) is 0:
+                return 0
             for i in range(self.number_of_cache_entries):
                 if self.cache_entries[i]['file'] is cache_file_name:
                     return i
-            return 0
+            return None
         except Exception as e:
-            print "ERROR: occurred when getting the key to a file\n{}".format(e.message)
+            print "ERROR: file requested not in cache."
 
     def get_version_of_file(self, cache_file_name):
-        try:
             for i in range(self.number_of_cache_entries):
                 if self.cache_entries[i]['file'] is cache_file_name:
                     return self.cache_entries[i]['version'], self.cache_entries[i]['file'], cache_file_name
             return 0, 0, 0
-        except Exception as e:
-            print "ERROR: occurred when getting version for file: {}\n{}".format(cache_file_name, e.message)
 
     def data_from_cache(self, key):
         try:

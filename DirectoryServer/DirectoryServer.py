@@ -19,7 +19,7 @@ ONLINE_SERVER_BY_PORT = {}
 NUM_CLIENTS = 0
 # LIST_OF_FILE_VERSIONS[file_id] = {}
 LIST_OF_FILE_VERSIONS = {}
-
+LOCK_SERVER_ON = False
 
 LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
 
@@ -111,7 +111,7 @@ class CreateNewFileServer(Resource):
         LOAD_ON_FILE_SERVER[file_server_id] = num_files
         print "Just created a new file server...\n" \
               "FILE_SERVER_IP='{0}'\nFILE_SERVER_PORT='{1}'\nFILE_SERVER_ID='{2}'\n".format(
-               file_server_ip, file_server_port, file_server_id
+            file_server_ip, file_server_port, file_server_id
         )
         print "----------------------------------\n" \
               "hello world from file server {}...\n" \
@@ -131,17 +131,56 @@ class CreateNewClient(Resource):
         if request_from_client == 'Y':
             resp = {'client_id': NUM_CLIENTS}
             if os.path.exists((path + '/' + str(NUM_CLIENTS))):
-                os.mkdir(path + '/' + 'Client' + str(NUM_CLIENTS)+'.txt')
+                os.mkdir(path + '/' + 'Client' + str(NUM_CLIENTS) + '.txt')
                 print "made dir for client{}".format(NUM_CLIENTS)
             NUM_CLIENTS += 1
             return resp
         else:
-            return{'client_id': None}
+            return {'client_id': None}
+
+
+class CommsWithLockingServer(Resource):
+    def get(self):
+        global LOCK_SERVER_ON
+        print "looking for lcok on a file"
+        message_to_locking_server = request.get_json()
+        client_id = message_to_locking_server['client_id']
+        file_id = message_to_locking_server['file_id']
+        file_server_id = message_to_locking_server['file_server_id']
+        if LOCK_SERVER_ON is True:
+            resp = requests.get(
+                SFL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
+                json={'client_id': client_id, 'file_id': file_id, 'file_server_id': file_server_id}
+            )
+            return {'lock': resp.json()['lock']}
+        else:
+            return {'lock': False, 'message': "Lock Server is not online"}
+
+    def delete(self):
+        global LOCK_SERVER_ON
+        message_to_locking_server = request.get_json()
+        client_id = message_to_locking_server['client_id']
+        file_id = message_to_locking_server['file_id']
+        file_server_id = message_to_locking_server['file_server_id']
+        if LOCK_SERVER_ON is True:
+            resp = requests.delete(
+                SFL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
+                json={'client_id': client_id, 'file_id': file_id, 'file_server_id': file_server_id}
+            )
+            return {'lock': resp.json()['lock']}
+        else:
+            return {'lock': False, 'message': "Lock Server is not online"}
+
+    def post(self):
+        global LOCK_SERVER_ON
+        LOCK_SERVER_ON = True
+        return {'response': LOCK_SERVER_ON}
 
 
 api.add_resource(DirectoryServer, '/')
 api.add_resource(CreateNewFileServer, '/create_new_file_server')
 api.add_resource(CreateNewClient, '/create_new_client')
+api.add_resource(CommsWithLockingServer, '/lock_server')
 
 if __name__ == '__main__':
     app.run(debug=True)

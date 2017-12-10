@@ -1,5 +1,8 @@
+import requests
 from flask import Flask, request
-from flask_restful import Resource, Api, abort
+from flask_restful import Resource, Api
+import SharedFileFunctions as SFL
+
 
 app = Flask(__name__)
 api = Api(app)
@@ -7,6 +10,8 @@ api = Api(app)
 # Map fileID to Locked(True/False)
 # FILES_WITH_LOCK[file_server_id/file_id] = client_id
 FILES_WITH_LOCK = {}
+
+DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
 
 
 class LockingServer(Resource):
@@ -52,4 +57,13 @@ class LockingServer(Resource):
 api.add_resource(LockingServer, '/')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=12345)
+    response = requests.post(
+        SFL.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1],
+                       "lock_server")
+    )
+
+    if response.json()['response'] is True:
+        app.run(debug=True, port=12345)
+    else:
+        print "ERROR: Could not connect to the directory server..."
+
