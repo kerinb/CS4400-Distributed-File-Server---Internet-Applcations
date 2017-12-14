@@ -3,8 +3,8 @@
 ### Breandan Kerin - B.A.I, Computer Engineering, Trinity College Dublin - 14310166 ###
 
 This project was completed as part of my module, CS4400 - Internet Applications in Trinity College Dublin (TCD). 
-The aim of this project was to implement a Distributed file server, as either an NFS or AFS style server. It also had
-to have other features implemented, a minimum of four had to be chosen from the following list:
+The aim of this project was to implement a Distributed file server, as either an NFS; Network File System, or AFS; Andrew File System
+style server. It also had to have other features implemented, a minimum of four had to be chosen from the following list:
 
 *    Distributed Transparent File Access - Either AFS or NFS
 *    Security Service
@@ -20,7 +20,7 @@ The features I have implemented are:
 3. Caching
 4. Lock Service
 
-### Languages, Dependancies etc ###
+### Languages, Dependencies etc ###
 * Python 2.7. 
 * Flask
 * flask-restful 
@@ -54,18 +54,22 @@ For the client to communicate with the file server, it must first communicate wi
 
 *    A client that wishes to read a remote copy of a file from a file server will need to send a get() request. The client must provide JSON parameters:
 *        'file_id': file_id
-*        'file_server_id': server_id
+*        'file_server_id': file_server_id
 *    A client wishing to write to a remote copy of a file will send a post() request. The client must provide JSON parameters:
 *        'file_id': file_id
-*        'file_contents': file_contents
+*        'data': data
 
-<b>NOTE: There is no versioning in that any files written to on the server is overwritten </b>
-The file servers are hosted on ports 5001 +
+NOTE: There is no versioning in that any files written to on the server is overwritten
+The file servers are hosted on ports 5001, 5002 etc etc, which are passed in as environment variables at run time.
 
 ### Directory Server ###
 The directory server must be started of first, as the file server and locking server need to register themselves with it.
 the directory server is located at the default address: 'http://127.0.0.1:5000'.  The Directory Server acts as a management server
-for the entire distributed file system. The Directory server maintains a record of the mappings of the client names and file mappings. 
+for the entire distributed file system. The Directory server maintains a record of the mappings of the client names and file mappings.
+The Directory server takes in a request by a client, and checks whether the file the client has requested exists on the file server
+If the file exists, the directory server returns the ip and port number of the file server to the client, where the client can
+make communications with the file server. The same works for a write operation also, but if the file doesnt exist on a file server,
+the round robin protocol is used to assign the file to a file server, that has the least files stored on it.
 
 The directory server also performs the following:
 * acts a registration system as mentinoed above for the file server and lock server
@@ -75,5 +79,9 @@ the least loaded file server
 ### Caching ###
 Each client has its own cache implemented as a caching object. The cache is implemented using Least Recently Used policy,
 where each file is stored with a time-date stamp, and the file that was accessed least recently is evicted.
-Everytime a file is read from a file server, it is added to the cache, with its time date stamp. 
+Everytime a file is read from a file server, it is added to the cache, with its time date stamp.
+The cache can store currently 3 files simply for the point of illustration, to increase the number of files that the cache
+can store, simply increase the size of MAX_SIZE_OF_CACHE.
+
+
 

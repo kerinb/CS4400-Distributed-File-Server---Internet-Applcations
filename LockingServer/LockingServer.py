@@ -1,8 +1,8 @@
 import requests
 from flask import Flask, request
 from flask_restful import Resource, Api
-import SharedFileFunctions as SFL
 
+import SharedFileFunctions as SFL
 
 app = Flask(__name__)
 api = Api(app)

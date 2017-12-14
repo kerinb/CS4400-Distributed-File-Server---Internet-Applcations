@@ -1,7 +1,10 @@
 import os
 import requests
+import sys
 from flask import Flask
 from flask_restful import Resource, Api, reqparse, request
+CURR_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(CURR_DIR))
 import SharedFileFunctions as SFL
 
 app = Flask(__name__)

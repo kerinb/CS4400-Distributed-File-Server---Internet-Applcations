@@ -1,11 +1,6 @@
 import os
 import datetime
 
-"""
-I want the cache to store a file and its version, and i need to determine a key for it. 
-how do I determine a key? 
-"""
-
 
 def find_LRU_key(cache_entries):
     min_key = 0
@@ -119,7 +114,7 @@ class Cache:
                     return i
             return None
         except Exception as e:
-            print "ERROR: file requested not in cache."
+            print "ERROR: file requested not in cache.\n{}".format(e.message)
 
     def get_version_of_file(self, cache_file_name):
             for i in range(self.number_of_cache_entries):

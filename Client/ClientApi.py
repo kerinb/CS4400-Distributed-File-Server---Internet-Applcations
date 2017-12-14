@@ -2,6 +2,10 @@ import os
 
 import datetime
 import requests
+import sys
+
+CURR_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(CURR_DIR))
 import SharedFileFunctions as Fsl
 import Cache
 
@@ -123,8 +127,8 @@ def verify_file_exists(file_name, cache):
             print "file {0} requested by client {1} is in your cache\n". \
                 format(file_name, cache.client_id)
         else:
-            print "The file {0} requested by client{1} does not exist on any of our servers...\n".format(file_name,
-                                                                                                         cache.client_id)
+            print "The file {0} requested by client{1} does not exist on any of our servers...\n".\
+                format(file_name, cache.client_id)
         return file_server_details, file_id
     except Exception as e:
         print "ERROR: occurred when verifying if file exists\n{}".format(e.message)
