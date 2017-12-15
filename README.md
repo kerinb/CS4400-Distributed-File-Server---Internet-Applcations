@@ -37,20 +37,20 @@ to the following is used: *./<script name>.sh*
 The list below shows the order in which to run each of the scripts.
 
 *    ./install_requirements.sh
-*        This script must be run first. It will install all of the required dependencies in order for the service to run, it installs
+    * This script must be run first. It will install all of the required dependencies in order for the service to run, it installs
     all of the listed requirements from the *requirements.txt* file.
 *    ./launch_directory_server.sh
-*        This script will run the directory server launching script. It will make the directory server available at the URL "http://127.0.0.1:46666"
-*        This address and port number is known by every entity that requires it; file server, lock server and client.
+    * This script will run the directory server launching script. It will make the directory server available at the URL "http://127.0.0.1:46666"
+    * This address and port number is known by every entity that requires it; file server, lock server and client.
 *    ./launch_locking_server.sh
-        * This script runs the locking server. In relation to the order of launch, this and the file server scripts can be run interchangeably.
-        * This script runs the locking server at URL "http://127.0.0.1:46667".
-* ./launch_file_server.sh <number_of_servers_to_spawn>
+    * This script runs the locking server. In relation to the order of launch, this and the file server scripts can be run interchangeably.
+    * This script runs the locking server at URL "http://127.0.0.1:46667".
+*    ./launch_file_server.sh <number_of_servers_to_spawn>
     * This script runs up a series of file servers. For this file, the number of file servers to spawn must be specified in the
     <number_of_servers_to_spawn> field. Here, the first file server will be hosted on port "46668",  and every subsequent file server spawned
     will be hosted on the incremented value of the previous; ie 46668, 46669 etc etc.
     hence the URL for the servers will similar to "http://127.0.0.1:46668"
-* ./launch_client.sh
+*    ./launch_client.sh
     * This script will spawn up a single client. To spawn multiple clients, this script will need to be run multiple times. This is
     because each client will be required to input values for file names etc while in use, and would simply cause confusion if they were
     all run on the same window.
@@ -69,9 +69,11 @@ The list of requirements are contained within _requirements.txt_ file. all of th
  list are then downloaded and installed using the _pip install --user -r requirements.txt_ command in the
  *install_requirements.sh* script, which should be run before attempting to launch any of the distributed service scripts.
  The list below indicates all of the dependencies to be installed.
-* Flask
-* flask-restful 
-* requests
+ 
+*    Flask
+*    flask-restful 
+*    requests
+
 In order to work effectively with this project, a basic understanding of JSON would be beneficial since the data being stored and
 transferred between the classes are in JSON format (it is the default data transfer method in the Flask framework).
 
@@ -84,11 +86,14 @@ A file server implementation was also developed as a RESTful server that could b
 The user application is named _client.py_, and not _clientApi.py_. It acts as an interface to the clientApi.py library, which was mentioned above.
 Here, the client is able to make decisions for files stored locally and on the file servers.
 Using the ClientApi, the client is able to:
+
 *	Read a remote copy of a file from a file server
 *   Write to the remote copy of a file on a file server,
 *	Create a file that is stored locally and is also pushed to the server containing the data "First Time file is
  opened.... Edit me!".
+ 
 NOTE:
+
 1.  In order to _open_ a file, the client must first create it locally, using option *4 - Create new file*
     This will create a new file locally in the cache and will also post it to the file server with the contents "First Time file is
     opened.... Edit me!".
