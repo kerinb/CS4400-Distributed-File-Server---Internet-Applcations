@@ -195,5 +195,59 @@ I have also implemented a timer on the lock.
 This method is the *morgan_turn_on_the_clock* method (https://www.youtube.com/watch?v=l0JaxtwVteY skip to 0:35 to understand..!)
 
 ## Screen shots ##
+##Client Images ##
+### Client start up ###
+![Alt text](images_results/client1StartingUp.PNG)
+
 ###Creating a file locally - invalid ###
 ![Alt text](images_results/clientInvalidCreate.PNG)
+
+###Creating a file locally - valid ###
+![Alt text](images_results/clientValidCreate.PNG)
+
+### write to a file locally - invalid ###
+![Alt text](images_results/clientInvalidWrite.PNG)
+
+### write to a file locally - valid ###
+![Alt text](images_results/clientValidWrite.PNG)
+
+### read a file locally - invalid ###
+![Alt text](images_results/clientIvalidRead.PNG)
+
+### read a file locally - valid ###
+![Alt text](images_results/clientValidRead.PNG)
+
+## Cache Images##
+### Cache after using LRU ###
+![Alt text](images_results/cacheUpdateWithLRU.PNG)
+![Alt text](images_results/client0CacheAfterLRU.PNG)
+
+## File Server ##
+### file server reg  ###
+![Alt text](images_results/fileServerRegistration.PNG)
+![Alt text](images_results/fileServerRegistration1.PNG)
+
+### file server flat file example ###
+![Alt text](images_results/fileServerFlatFileExample.PNG)
+
+### file server create new file ###
+![Alt text](images_results/fileServerCreateNewFile.PNG)
+
+### file server create new file with pre-populated date ###
+![Alt text](images_results/fileServerCreateNewFileAddDefaultData.PNG)
+
+### file server update file ###
+![Alt text](images_results/fileServerUpdateFile.PNG)
+
+## Locking Server ##
+### locking server registration ###
+![Alt text](images_results/lockingServerRegistration.PNG)
+
+### locking server registration 1 ###
+![Alt text](images_results/lockingServerRegistration1.PNG)
+
+### locking add remove lock ###
+![Alt text](images_results/lockAddRemoveLock.PNG)
+
+### locked file ###
+![Alt text](images_results/fileLocked.PNG)
