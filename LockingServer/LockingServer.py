@@ -26,6 +26,8 @@ def unlock_time(file_server_id, file_id, client_id):
         del FILES_WITH_LOCK[key]
 
 
+# https://www.youtube.com/watch?v=l0JaxtwVteY
+# skip to 0:35 to understand XD
 def morgan_turn_on_the_clock(file_server_id, file_id, client_id):
     t = Timer(60.0, unlock_time(file_server_id, file_id, client_id))
     t.start()

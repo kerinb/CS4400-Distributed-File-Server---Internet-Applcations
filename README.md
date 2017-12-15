@@ -89,7 +89,8 @@ Using the ClientApi, the client is able to:
 NOTE:
 1.  In order to _open_ a file, the client must first create it locally, using option *4 - Create new file*
     This will create a new file locally in the cache and will also post it to the file server with the contents "First Time file is
-    opened.... Edit me!".
+    opened.... Edit me!". NOTE - values such as new line chars and tab chars are not allowed and the client will be asked to sumbit a vaid file name
+    excluding a file extension
 2.  In order to write a file to the file server, the file must first exist, hence the client must use option 4 to create the file first
 3.  When editing a file, if the client is run on a windows application, the text editor used is Notepad, and if run on a linux system,
     the client has a choice between using Gedit or Nano.
@@ -173,8 +174,28 @@ The operations that can be performed by the cache, with interest to the client, 
     *  which allows the user to read files from the cache if the version stored is the same as the version that is stored on the directory server.
 2. Add cache entry:
     *  This method will add a new entry to the cache table if the file isnt in the table at present. This method implements linear probing when adding files to the cache,
-    once the cache is full, this function will then begin using the LRU eviction policy. 
+    once the cache is full, this function will then begin using the LRU eviction policy.
 3. Update data in cache:
     * This method will update the data that is stored in a file if the version on the cache is out of sync with the file server.
 
+## Component 4: Locking ##
+### Locking Server ###
+In this project, I have implemented it so that there is only 1 locking server in the system. The implementation for this server is located in
+the *LockingServer/LockingServer.py* file. The locking server manages the operation of both locking and unlocking files for the client whenever
+a request is sent to the locking server. The way I have this architectured is that, when a client wishes to write to a file, it sends a request to
+the directory server, where it is then forwarded onto the locking server where it can either be locked or refused.
+The locking server is hosted at "http://127.0.0.1:46667".
 
+It should be noted that for a client to read from a file, it does not require a lock on the file, and multiple clients can read from the file concurrently.
+If however the client wishes to write to a file, it must obtain a lock. When there is a lock on a file, no other client; bar the client with the lock, can operate on that file.
+
+The locking server holds a list of files that currently have a lock on a file. This list works as a look up table, and has files added and removed
+from it whenever the lock and unlock requests come in from the client.
+
+I have also implemented a timer on the lock, if the lock has been on for longer than 1 minute; 60 seconds, the file is then unlocked. My assumption
+here is that, when I lock a file; which only happens when a client is writing to a file, that it shouldn't take longer than 1 minute to write my data
+into a file, and if the time taken to write to the file is greater than 1 minute, I have assumed that the client is dead, and the file is then unlocked.
+This method is the *morgan_turn_on_the_clock* method (https://www.youtube.com/watch?v=l0JaxtwVteY skip to 0:35 to understand)
+
+## Screen shots ##
+###Creating a file locally ###
