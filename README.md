@@ -49,12 +49,12 @@ The list below shows the order in which to run each of the scripts.
     * This address and port number is known by every entity that requires it, i.e. the file servers, locking server and client API.
 *    **./launch_locking_server.sh**
     * This script runs the locking server. In relation to the order of launch, this and the file server scripts can be run interchangeably.
-    * This script runs the locking server at URL "http://127.0.0.1:46667".
+    * This script runs the locking server at URL **http://127.0.0.1:46667"**.
 *    **./launch_file_server.sh <number_of_servers_to_spawn>**
     * This script runs up a series of file servers. For this file, the number of file servers to spawn must be specified in the
     <number_of_servers_to_spawn> field. Here, the first file server will be hosted on port "46668",  and every subsequent file server spawned
-    will be hosted on the incremented value of the previous; ie 46668, 46669 etc etc.
-    hence the URL for the servers will similar to "http://127.0.0.1:46668"
+    will be hosted on the incremented value of the previous; ie 46668, 46669, etc. etc.
+    hence the URL for the servers will similar to **http://127.0.0.1:46668**.
 *    **./launch_client.sh**
     * This script will spawn up a single client. To spawn multiple clients, this script will need to be run multiple times. This is
     because each client will be required to input values for file names etc while in use, and would simply cause confusion if they were
@@ -110,7 +110,7 @@ either read, write, create file, verify if a file exists (locally or on a file s
 ### 2: File Server ###
 The file server class is implemented such that it store the files as a flat-file system, where the files are stored in the file server without any deeper directories used. 
 
-The file server directories are named using the file servers *file_server_id*; which is created when the file server first registers itself with the directory server, appended to 'Server';
+The file server directories are named using the file servers **file_server_id**; which is created when the file server first registers itself with the directory server, appended to 'Server';
 ie, '_Server0/_', '_Server1/_' etc. The file servers directory is created when the file server starts up, just after the file server has registered
 with the directory server; hence the **server_id** can be used to identify the file server.
 
