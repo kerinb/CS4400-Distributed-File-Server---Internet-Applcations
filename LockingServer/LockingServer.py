@@ -1,12 +1,9 @@
 import os
-from threading import Timer
-
 import requests
 import sys
 from flask import Flask, request
 from flask_restful import Resource, Api
-CURR_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(CURR_DIR))
+
 import SharedFileFunctions as SFL
 
 app = Flask(__name__)
@@ -16,22 +13,7 @@ api = Api(app)
 # FILES_WITH_LOCK[file_server_id/file_id] = client_id
 FILES_WITH_LOCK = {}
 
-DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 46666)
-
-
-def unlock_time(file_server_id, file_id, client_id):
-    key = str(file_server_id) + '/' + str(file_id)
-
-    if FILES_WITH_LOCK[key] == client_id:
-        del FILES_WITH_LOCK[key]
-
-
-# https://www.youtube.com/watch?v=l0JaxtwVteY
-# skip to 0:35 to understand XD
-def morgan_turn_on_the_clock(file_server_id, file_id, client_id):
-    t = Timer(60.0, unlock_time(file_server_id, file_id, client_id))
-    t.start()
-
+DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
 
 
 class LockingServer(Resource):
@@ -44,14 +26,38 @@ class LockingServer(Resource):
         print "client {0} has requested a lock on file {1}" \
               " on file server{2}".format(client_id, file_id, file_server_id)
         key = str(file_server_id) + '/' + str(file_id)
+        print key
 
         if key in FILES_WITH_LOCK:
             # This file on this server is already taken by a client...
+            print FILES_WITH_LOCK
+            print 'file is locked'
             return {'lock': False}
 
         else:
             FILES_WITH_LOCK[key] = client_id
-            morgan_turn_on_the_clock(file_server_id, file_id, client_id)
+            print FILES_WITH_LOCK
+            print 'file is not locked'
+            return {'lock': True}
+
+    def post(self):
+        file_id = request.get_json()['file_id']
+        file_server_id = request.get_json()['file_server_id']
+        client_id = request.get_json()['client_id']
+        print "client {0} has requested a lock on file {1}" \
+              " on file server{2}".format(client_id, file_id, file_server_id)
+        key = str(file_server_id) + '/' + str(file_id)
+        print key
+
+        if key in FILES_WITH_LOCK:
+            # This file on this server is already taken by a client...
+            print FILES_WITH_LOCK
+            print 'file is locked'
+            return {'lock': False}
+
+        else:
+            print FILES_WITH_LOCK
+            print 'file is not locked'
             return {'lock': True}
 
     # remove lock on file
