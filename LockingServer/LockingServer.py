@@ -3,7 +3,8 @@ import requests
 import sys
 from flask import Flask, request
 from flask_restful import Resource, Api
-
+CURR_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(CURR_DIR))
 import SharedFileFunctions as SFL
 
 app = Flask(__name__)
@@ -13,7 +14,7 @@ api = Api(app)
 # FILES_WITH_LOCK[file_server_id/file_id] = client_id
 FILES_WITH_LOCK = {}
 
-DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
+DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 46666)
 
 
 class LockingServer(Resource):

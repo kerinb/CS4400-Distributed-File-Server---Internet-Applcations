@@ -1,16 +1,11 @@
-#!/bin/bash
+#!/bin/sh
 
-declare -i PORT_NUM
-
-HOST_ADDR = "127.0.0.1"
-PORT_NUM = 5002
-
+HOST="127.0.0.1"
+INITIAL_PORT=46668
 
 for i in $( seq 2 $1 )
 do
-    python FileServer/FileServer.py $HOST_ADDR "$PORT_NUM" &
-    echo "Launching a file Server on 'http://127.0.0.1:"$PORT_NUM"'"
-    PORT_NUM = PORT_NUM +1
+        python FileServer/FileServer.py $HOST $INITIAL_PORT &
+        INITIAL_PORT=$((INITIAL_PORT+1))
 done
-
-python FileServer/FileServer.py $HOST_ADDR "$PORT_NUM"
+python FileServer/FileServer.py $HOST $INITIAL_PORT

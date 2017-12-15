@@ -24,7 +24,7 @@ NUM_CLIENTS = 0
 LIST_OF_FILE_VERSIONS = {}
 LOCK_SERVER_ON = False
 
-LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
+LOCKING_SERVER_DETAILS = ()
 
 
 def get_file_details_if_exist(file_name):

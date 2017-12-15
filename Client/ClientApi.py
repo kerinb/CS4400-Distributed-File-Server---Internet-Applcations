@@ -12,7 +12,7 @@ import SharedFileFunctions as Sff
 import Cache
 
 TEXT_EDITOR = None
-DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
+DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 46666)
 CACHE_DIR = ''
 LIST_OF_UNACCEPTABLE_FILE_NAMES = ['', '\n', ' ', '\t', '   ']
 editor = None
@@ -20,9 +20,7 @@ editor = None
 
 def open_text_editor(file_to_read):
     global editor
-    print 'platform' + _platform
     if _platform == "linux" or _platform == "linux2":
-        print "OS = Linux"
         if editor is None:
             while True:
                 editor = raw_input("Enter G to use gedit or N to use Nano\n")

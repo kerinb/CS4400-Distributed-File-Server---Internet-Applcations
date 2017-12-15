@@ -13,8 +13,8 @@ import SharedFileFunctions as SFL
 app = Flask(__name__)
 api = Api(app)
 
-DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
-LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
+DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 46666)
+LOCKING_SERVER_DETAILS = ()
 
 
 class FileServer(Resource):
