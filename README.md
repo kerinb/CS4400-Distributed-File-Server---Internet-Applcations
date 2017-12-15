@@ -173,4 +173,27 @@ This cache is implemented as a * Direct Mapped Cache*; each tag has its own slot
 3. Updating a cache entry
     * This method will update the data that is stored in a file if the version on the cache is out of sync with the file server.
 
+## Component 4: Locking ##
+### Locking Server ###
+In this project, I have implemented it so that there is only 1 locking server in the distributed filesystem. The implementation for this server is located in the *LockingServer/LockingServer.py* file.
 
+The locking server manages the operation of both locking and unlocking files for the client whenever a request is sent to the locking server.
+
+The locking server is architectured such that, when a client wishes to write to a file, it sends a request to the directory server, where it is then forwarded onto the locking server, where it can either be locked or refused. The locking server is hosted at **http://127.0.0.1:46667**.
+
+*    It should be noted that for a client to _read_ from a file, it does not need to obtain a lock on the file - if the file is unlocked, then multiple clients can read from the file concurrently.
+*    If however the client wishes to _write_ to a file, it must obtain a lock. When there is a lock on a file, no other client bar the client with the lock can operate on that file.
+
+
+The locking server holds a list of files that currently have a lock on a file. This list works as a lookup table, and has files added and removed from it whenever the lock and unlock requests come in from the client.
+
+I have also implemented a timer on the lock.
+
+*    If the lock has been on a file for longer than **1 minute/60 seconds**, the file is then unlocked. My assumption here is that, when I place a lock on a file (which only happens when a client is writing to a file), that it shouldn't take longer than 1 minute to write my data into the file.
+*    Basically if the time taken to write to the file is greater than 1 minute, I have assumed that the client is dead, and the file is then unlocked so that other clients can access it.
+
+This method is the *morgan_turn_on_the_clock* method (https://www.youtube.com/watch?v=l0JaxtwVteY skip to 0:35 to understand..!)
+
+## Screen shots ##
+###Creating a file locally ###
+TODO add these
