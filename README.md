@@ -25,24 +25,24 @@ This application can be run either on Windows or Linux; It has not yet been test
 several shell scripts are provided to launch the system. These scripts can be used to run the system through a Command Line Interface; _CLI_,such as terminal
 on Linux. To run these scripts, the permissions need to be granted in order for them to be executed. The permissions can be granted as follows:
 _chmod 755 <script name>_. The list below is the list of required commands to give permissions in this project:
-* chmod 755 install_requirements.sh
-* chmod 755 launch_directory_server.sh
-* chmod 755 launch_file_server.sh
-* chmod 755 launch_locking_server.sh
-* chmod 755 launch_client.sh
+*    chmod 755 install_requirements.sh
+*    chmod 755 launch_directory_server.sh
+*    chmod 755 launch_file_server.sh
+*    chmod 755 launch_locking_server.sh
+*    chmod 755 launch_client.sh
 
 To launch the system, first give the permissions as shown above, then in order to run the scripts, a command similar
 to the following is used: *./<script name>.sh*
 The list below shows the order in which to run each of the scripts.
-* ./install_requirements.sh
-    * This script must be run first. It will install all of the required dependencies in order for the service to run, it installs
+*    ./install_requirements.sh
+        * This script must be run first. It will install all of the required dependencies in order for the service to run, it installs
     all of the listed requirements from the *requirements.txt* file.
-* ./launch_directory_server.sh
-    * This script will run the directory server launching script. It will make the directory server available at the URL "http://127.0.0.1:46666"
-    This address and port number is known by every entity that requires it; file server, lock server and client.
-* ./launch_locking_server.sh
-    * This script runs the locking server. In relation to the order of launch, this and the file server scripts can be run interchangeably.
-    This script runs the locking server at URL "http://127.0.0.1:46667".
+*    ./launch_directory_server.sh
+        * This script will run the directory server launching script. It will make the directory server available at the URL "http://127.0.0.1:46666"
+        * This address and port number is known by every entity that requires it; file server, lock server and client.
+*    ./launch_locking_server.sh
+        * This script runs the locking server. In relation to the order of launch, this and the file server scripts can be run interchangeably.
+        * This script runs the locking server at URL "http://127.0.0.1:46667".
 * ./launch_file_server.sh <number_of_servers_to_spawn>
     * This script runs up a series of file servers. For this file, the number of file servers to spawn must be specified in the
     <number_of_servers_to_spawn> field. Here, the first file server will be hosted on port "46668",  and every subsequent file server spawned
