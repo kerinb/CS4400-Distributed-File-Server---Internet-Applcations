@@ -58,8 +58,7 @@ class DirectoryServer(Resource):
         file_name = self.parser.parse_args()['file_name']
         print 'file name:' + file_name
         file_id, file_server_details, file_server_id, version = get_file_details_if_exist(file_name)
-        return {'file_id': file_id, 'file_server_details': file_server_details, 'file_server_id': file_server_id,
-                'version': version}
+        return {'file_id': file_id, 'file_server_details': file_server_details, 'file_server_id': file_server_id, 'version': version}
 
     def post(self):
         file_name = self.parser.parse_args()['file_name']
@@ -114,7 +113,7 @@ class CreateNewFileServer(Resource):
         LOAD_ON_FILE_SERVER[file_server_id] = num_files
         print "Just created a new file server...\n" \
               "FILE_SERVER_IP='{0}'\nFILE_SERVER_PORT='{1}'\nFILE_SERVER_ID='{2}'\n".format(
-            file_server_ip, file_server_port, file_server_id
+               file_server_ip, file_server_port, file_server_id
         )
         print "----------------------------------\n" \
               "hello world from file server {}...\n" \
@@ -145,7 +144,7 @@ class CreateNewClient(Resource):
 class CommsWithLockingServer(Resource):
     def get(self):
         global LOCK_SERVER_ON
-        print "looking for lcok on a file"
+        print "looking for lock on a file"
         message_to_locking_server = request.get_json()
         client_id = message_to_locking_server['client_id']
         file_id = message_to_locking_server['file_id']
@@ -175,8 +174,15 @@ class CommsWithLockingServer(Resource):
             return {'lock': False, 'message': "Lock Server is not online"}
 
     def post(self):
+        global LOCKING_SERVER_DETAILS
+        message = request.get_json()
+        address = message['address']
+        port = message['port']
+        LOCKING_SERVER_DETAILS = (address, port)
+        print "Received Registration request from a Locking Server...."
         global LOCK_SERVER_ON
         LOCK_SERVER_ON = True
+        print "Acknowledging Locking Servers Registration request...\n"
         return {'response': LOCK_SERVER_ON}
 
 
@@ -186,4 +192,12 @@ api.add_resource(CreateNewClient, '/create_new_client')
 api.add_resource(CommsWithLockingServer, '/lock_server')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    print "'hello world' said the directory server"
+    print "sys[1]: {}".format(str(sys.argv[1]))
+    print "sys[2]: {}".format(str(sys.argv[2]))
+    if len(sys.argv) == 3:
+        if os.environ.get("WERKZEUG_RUN_MAIN") == 'true':
+            pass
+        app.run(debug=False, host=sys.argv[1], port=int(sys.argv[2]))
+        # except Exception as e:
+        # print "ERROR: occurred when initialising the directory server\nMESSAGE: {}".format(e.message)

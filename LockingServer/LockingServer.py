@@ -1,4 +1,6 @@
+import os
 import requests
+import sys
 from flask import Flask, request
 from flask_restful import Resource, Api
 
@@ -57,13 +59,18 @@ class LockingServer(Resource):
 api.add_resource(LockingServer, '/')
 
 if __name__ == '__main__':
-    response = requests.post(
-        SFL.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1],
-                       "lock_server")
-    )
-
-    if response.json()['response'] is True:
-        app.run(debug=True, port=12345)
-    else:
-        print "ERROR: Could not connect to the directory server..."
+    print "'hello world' said the locking server"
+    print "sys[1]: {}".format(str(sys.argv[1]))
+    print "sys[2]: {}".format(str(sys.argv[2]))
+    if len(sys.argv) == 3:
+        print "Registering with Directory Server..."
+        response = requests.post(
+            SFL.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1],
+                           "lock_server"), json={'address': str(sys.argv[1]), 'port': str(sys.argv[2])}
+        )
+        if response.json()['response'] is True:
+            print "Registered with Directory Server..."
+            app.run(debug=False, host=sys.argv[1], port=int(sys.argv[2]))
+        else:
+            print "ERROR: Could not connect to the directory server..."
 

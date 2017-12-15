@@ -3,6 +3,7 @@ import sys
 import os
 
 import requests
+import shutil
 from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
 CURR_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,7 +26,7 @@ class FileServer(Resource):
     def get(self):
         file_id = self.parser.parse_args()['file_id']
         file_server_id = self.parser.parse_args()['file_server_id']
-        file_name = str(file_server_id) + '/' + SFL.cast_file_id_to_file_name(file_id)
+        file_name = 'Server' + str(file_server_id) + '/' + SFL.cast_file_id_to_file_name(file_id)
         print file_name
 
         with open(file_name, 'r') as read_from_file:
@@ -79,21 +80,26 @@ api.add_resource(FileServer, '/')
 api.add_resource(CreateNewFile, '/create_new_file')
 
 if __name__ == '__main__':
-    print "hello world"
+    print "'hello world' said the file server"
+    print "sys[1]: {}".format(str(sys.argv[1]))
+    print "sys[2]: {}".format(str(sys.argv[2]))
+
     if len(sys.argv) == 3:
-        if os.environ.get("WERKZEUG_RUN_MAIN") == 'true':
-            print "instantiating a new instance of the file server..."
-            path = os.getcwd()
-            response = requests.post(
-                SFL.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1],
-                               "create_new_file_server"),
-                json={'new_file_server_ip_address': sys.argv[1], "new_file_server_port_number": sys.argv[2],
-                      'path': path}
-            )
-            print path
-            if not os.path.exists((path + '/' + 'Server' + str(response.json()['file_server_id']))):
-                os.mkdir(path + '/' + 'Server' + str(response.json()['file_server_id']))
-                print "made dir for server"
-        app.run(debug=True, host=sys.argv[1], port=int(sys.argv[2]))
+        print "registering the file server at 'http://{}:{} with the directory server...".format(str(sys.argv[1]),
+                                                                                                 str(sys.argv[2]))
+        path = os.getcwd()
+        response = requests.post(
+            SFL.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1],
+                           "create_new_file_server"),
+            json={'new_file_server_ip_address': sys.argv[1], "new_file_server_port_number": sys.argv[2],
+                  'path': path}
+        )
+        print "registered the file server at 'http://{}:{} with the directory server...".format(str(sys.argv[1]),
+                                                                                                str(sys.argv[2]))
+        if os.path.exists((path + '/' + 'Server' + str(response.json()['file_server_id']))):
+            shutil.rmtree((path + '/' + 'Server' + str(response.json()['file_server_id'])))
+            os.mkdir(path + '/' + 'Server' + str(response.json()['file_server_id']))
+            print "made dir for server"
+        app.run(debug=False, host=sys.argv[1], port=int(sys.argv[2]))
     else:
         print "Enter IP and Port Number for this new file server..."

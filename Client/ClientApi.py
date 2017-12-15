@@ -6,19 +6,19 @@ import sys
 
 CURR_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(CURR_DIR))
-import SharedFileFunctions as Fsl
+import SharedFileFunctions as Sff
 import Cache
 
 DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
-LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
 CACHE_DIR = ''
+LIST_OF_UNACCEPTABLE_FILE_NAMES = ['', '\n', ' ', '\t', '   ']
 
 
 def get_client_num():
     try:
         path = os.getcwd()
         response_from_create_client_id = requests.get(
-            Fsl.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1], 'create_new_client'),
+            Sff.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1], 'create_new_client'),
             json={'client_id': 'Y', 'path': path}
         )
         if response_from_create_client_id is not None:
@@ -28,84 +28,104 @@ def get_client_num():
 
 
 def read_file_from_server(file_name, cache):
-    file_to_read = "Cache{}/".format(cache.client_id) + file_name
-    file_name += '.txt'
+    # 1 - Check the DS, see if the file exist; get file id and file server id, and version
     response_from_directory_server = requests.get(
-        Fsl.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
+        Sff.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
         params={'file_name': file_name}
     )
+    file_to_read = "Cache{}/".format(cache.client_id) + file_name + '.txt'
+    file_name += '.txt'
+    print 'file name client has requested {}'.format(file_name)
 
-    # update cache if its needed
-    if cache.get_key_to_file(file_name) is None or response_from_directory_server.json()['version'] > \
-            cache.get_version_of_file(file_name):
-        file_server_details = response_from_directory_server.json()['file_server_details']
-        file_id = response_from_directory_server.json()['file_id']
-        file_server_id = response_from_directory_server.json()['file_server_id']
+    file_id, file_server_id, version, file_server_details = Sff.get_file_details_from_DS(
+        response_from_directory_server)
+
+    # update cache if (1) The file is not in the cache (2) the copy in the cache is out of date
+    if cache.get_key_to_file(file_name) is None or version > cache.get_version_of_file(file_name):
+        # getting file details
+        Sff.print_file_details(file_name, file_id, file_server_id, version)
+
         # check and see if the file details are up to date - if they are ignore, else update cache
         if file_server_details is not None and file_id is not None:
             response_from_directory_server = requests.get(
-                Fsl.create_url(file_server_details[0], file_server_details[1]),
+                Sff.create_url(file_server_details[0], file_server_details[1]),
                 params={'file_id': file_id, 'file_server_id': file_server_id}
             )
-            print response_from_directory_server.json()
+            # update cache
+            print "Updating data in the cache..."
+            data = response_from_directory_server.json()['file_str']
+            print data
+            cache.update_data_in_cache(file_to_read, data)
 
-    elif not os.path.exists(file_name):
-        print "ERROR: file {} does not exists in cache or on the server....\n Please enter a valid file name...". \
-            format(file_name)
+    if not os.path.exists(file_to_read):
+        print "ERROR: file {} does not exists in cache or on the server....\n Please enter a" \
+              " valid file name or create a new file...\n".format(file_name)
+        return
 
-    open_file = open(file_to_read + '.txt', 'w')
+    open_file = open(file_to_read, 'r')
+    dat = open_file.read()
     open_file.close()
-    os.system('gedit "{0}"'.format(file_to_read + '.txt'))
-    data_to_cache = open(file_to_read + '.txt', 'r').read()
-    cache.add_cache_entry(file_name, cache.get_version_of_file(file_name), data_to_cache)
+    os.system('gedit "{0}"'.format(file_to_read))
+    data_to_cache = open(file_to_read, 'r').read()
+    if dat is not data_to_cache:  # if the data in the file is updated, update the data in the cache, else continue
+        print "adding data to the cache\nLocation {}".format(file_name)
+        cache.add_cache_entry(file_name, cache.set_version_of_file(file_name), data_to_cache)
 
 
 def write_file_to_server(file_name, cache):
-    key_in_cache = cache.get_key_to_file(file_name)
-    is_file_in_cache = cache.get_cache_entry(file_name)
-    print key_in_cache
+    file_name_ = file_name + '.txt'
+    key_in_cache = cache.get_key_to_file(file_name_)
+    is_file_in_cache = cache.get_cache_entry(file_name_)
+
     if key_in_cache is not None and is_file_in_cache is not None:
         # I have a file in the cache
         response_from_directory_server = requests.get(
-            Fsl.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
+            Sff.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
             params={'file_name': file_name}
         )
-        file_server_details = response_from_directory_server.json()['file_server_details']
-        file_id = response_from_directory_server.json()['file_id']
-        file_server_id = response_from_directory_server.json()['file_server_id']
+        file_id, file_server_id, version, file_server_details = Sff.get_file_details_from_DS(
+            response_from_directory_server)
+        Sff.print_file_details(file_name, file_id, file_server_id, version)
 
         # get details for the server my file is on
         print "Trying to obtain a lock on file {} for client {}...".format(file_name, cache.client_id)
-        # try to lokc file on server
+        # try to lock file on server
         response_from_locking_server = requests.get(
-            Fsl.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1], 'lock_server'),
+            Sff.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1], 'lock_server'),
             json={'client_id': cache.client_id, 'file_id': file_id, 'file_server_id': file_server_id}
         )
 
         # if I can lock this file...
         if response_from_locking_server.json()['lock']:
-            file_to_read = "Cache{}/".format(cache.client_id) + file_name
+            print "Lock has been received for client{} for file: {}".format(cache.client_id, file_name)
+            file_to_read = "Cache{}/".format(cache.client_id) + file_name_
+            open_file = open(file_to_read, 'r')
+            dat = open_file.read()
+            open_file.close()
 
-            os.system('gedit "{0}"'.format(file_to_read + '.txt'))  # last chance to edit file before synch w/ server
-            data_to_send = open(file_to_read + '.txt', 'r').read()
-            print "http {}\nport {}".format(file_server_details[0], file_server_details[1])
-            response = requests.post(
-                Fsl.create_url(file_server_details[0], file_server_details[1]),
-                json={'file_id': file_id, 'data': data_to_send, 'server_id': file_server_id, 'file_name': file_name,
-                      'version': str(datetime.datetime.now())}
+            os.system('gedit "{0}"'.format(file_to_read))  # last chance to edit file before synch w/ server
+            file_ = open(file_to_read, 'r')
+            data_to_send = file_.read()
+            file_.close()
+            if dat is not data_to_send:  # if the data in the file is updated
+                # update the cache
+                cache.update_data_in_cache(file_name_, data_to_send)
+                # update the file on the server
+                requests.post(
+                    Sff.create_url(file_server_details[0], file_server_details[1]),
+                    json={'file_id': file_id, 'data': data_to_send, 'server_id': file_server_id, 'file_name': file_name,
+                          'version': str(datetime.datetime.now())}
+                )
 
-            )
-            print response.json()
             print "unlocking client{} from file .\n".format(cache.client_id, file_id)
-            response_from_locking_server = requests.delete(
-                Fsl.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1], 'lock_server'),
-                json={'client_id': cache.client_id, 'file_id': file_id,
-                      'file_server_id': file_server_id}
+            requests.delete(
+                Sff.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1], 'lock_server'),
+                json={'client_id': cache.client_id, 'file_id': file_id, 'file_server_id': file_server_id}
             )
-            print "unlock response: {}".format(response_from_locking_server)
+            print "File has been unlocked by locking server!"
 
         elif not response_from_locking_server.json()['lock']:
-            print 'The file is locked on another - Try again later...'
+            print 'The file is locked by another client - Try again later...'
     else:
         print "Data is not in cache/stored locally! - To be able to write the file to a server, first read it and" \
               " make changes"
@@ -114,7 +134,7 @@ def write_file_to_server(file_name, cache):
 def verify_file_exists(file_name, cache):
     try:
         response_from_directory_server = requests.get(
-            Fsl.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
+            Sff.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
             params={'file_name': file_name}
         )
         file_server_details = response_from_directory_server.json()['file_server_details']
@@ -127,7 +147,7 @@ def verify_file_exists(file_name, cache):
             print "file {0} requested by client {1} is in your cache\n". \
                 format(file_name, cache.client_id)
         else:
-            print "The file {0} requested by client{1} does not exist on any of our servers...\n".\
+            print "The file {0} requested by client{1} does not exist on any of our servers...\n". \
                 format(file_name, cache.client_id)
         return file_server_details, file_id
     except Exception as e:
@@ -149,7 +169,7 @@ def create_new_file(file_name, cache):
         print "Creating a new file {0} for the client{1}\n".format(file_name, cache.client_id)
         request_to_server = {'file_name': file_name, 'version': str(datetime.datetime.now())}
         response = requests.post(
-            Fsl.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
+            Sff.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
             params=request_to_server
         )
         open_file = open(file_name + '.txt', 'w')
@@ -162,38 +182,45 @@ def create_new_file(file_name, cache):
         print "ERROR: occurred when creating a new file\n{}".format(e.message)
 
 
+def check_and_remove_file_extension_if_given(file_name):
+    # This list is only an example, im not bothered to go through all possible file extensions
+    # If anyone wanted, you could declare a global list of file extensions and check against that
+    if '.' in file_name:
+        file_name = file_name.split('.', 1)[0]
+    return file_name
+
+
 def handle_client_request(client_req, client_id, cache):
+    file_name = raw_input("Enter the name of the file without a file extension...\n")
+    file_name = check_and_remove_file_extension_if_given(file_name)
+
     if client_req == '1':
-        print "client{} requested to open file to read in gedit from server....".format(client_id)
-        file_name = raw_input("Enter the name of the file you want to read...\n")
-        if file_name is not '' or file_name is not None:
+        print "client{} requested to read a file from server....".format(client_id)
+        if file_name not in LIST_OF_UNACCEPTABLE_FILE_NAMES:
             read_file_from_server(file_name, cache)
         else:
-            return
+            print "ERROR: Invalid file name: {}".format(file_name)
 
     elif client_req == '2':
         print "client{} requested to write changes to server...".format(client_id)
-        file_name = raw_input("Enter the name of the file you want to read...\n")
-        if file_name is not '':
+        if file_name not in LIST_OF_UNACCEPTABLE_FILE_NAMES:
             write_file_to_server(file_name, cache)
         else:
-            return
+            print "ERROR: Invalid file name: {}".format(file_name)
 
     elif client_req == '3':
         print "client{} requested to verify if a file is on a server...".format(client_id)
-        file_name = raw_input("Enter the name of the file you want to verify...\n")
-        if file_name is not '':
+        if file_name not in LIST_OF_UNACCEPTABLE_FILE_NAMES:
             verify_file_exists(file_name, cache)
         else:
-            return
+            print "ERROR: Invalid file name: {}".format(file_name)
 
     elif client_req == '4':
         print "client{} requested to create a new file on a file server...".format(client_id)
-        file_name = raw_input("Enter the name of the file you want to create...\n")
-        if file_name is not '':
+        if file_name not in LIST_OF_UNACCEPTABLE_FILE_NAMES:
             create_new_file(file_name, cache)
         else:
-            return
+            print "ERROR: Invalid file name: {}".format(file_name)
 
     elif client_req == 'E' or client_req == 'e':
         print "client{} requested to leave...".format(client_id)
