@@ -24,7 +24,7 @@ NUM_CLIENTS = 0
 LIST_OF_FILE_VERSIONS = {}
 LOCK_SERVER_ON = False
 
-LOCKING_SERVER_DETAILS = ()
+LOCKING_SERVER_DETAILS = ('127.0.0.1', 12345)
 
 
 def get_file_details_if_exist(file_name):
@@ -56,9 +56,26 @@ class DirectoryServer(Resource):
     # returns the location and file number for desired file
     def get(self):
         file_name = self.parser.parse_args()['file_name']
+        client_id = request.get_json()['client_id']
         print 'file name:' + file_name
         file_id, file_server_details, file_server_id, version = get_file_details_if_exist(file_name)
-        return {'file_id': file_id, 'file_server_details': file_server_details, 'file_server_id': file_server_id, 'version': version}
+
+        resp = requests.post(
+            SFL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
+            json={'client_id': client_id, 'file_id': file_id, 'file_server_id': file_server_id}
+        )
+        foo = {'lock': resp.json()['lock']}
+        print foo
+        requests.post(
+            SFL.create_url(LOCKING_SERVER_DETAILS[0], LOCKING_SERVER_DETAILS[1]),
+            json={'client_id': client_id, 'file_id': file_id, 'file_server_id': file_server_id}
+        )
+        print foo
+        if not resp.json()['lock']:
+            return {'file_id': None, 'file_server_details': None, 'file_server_id': None,
+                    'version': None, 'lock': foo}
+        return {'file_id': file_id, 'file_server_details': file_server_details, 'file_server_id': file_server_id,
+                'version': version, 'lock': foo}
 
     def post(self):
         file_name = self.parser.parse_args()['file_name']

@@ -12,7 +12,7 @@ import SharedFileFunctions as Sff
 import Cache
 
 TEXT_EDITOR = None
-DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 46666)
+DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
 CACHE_DIR = ''
 LIST_OF_UNACCEPTABLE_FILE_NAMES = ['', '\n', ' ', '\t', '   ']
 editor = None
@@ -20,7 +20,9 @@ editor = None
 
 def open_text_editor(file_to_read):
     global editor
+    print 'platform' + _platform
     if _platform == "linux" or _platform == "linux2":
+        print "OS = Linux"
         if editor is None:
             while True:
                 editor = raw_input("Enter G to use gedit or N to use Nano\n")
@@ -53,46 +55,52 @@ def read_file_from_server(file_name, cache):
     # 1 - Check the DS, see if the file exist; get file id and file server id, and version
     response_from_directory_server = requests.get(
         Sff.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
-        params={'file_name': file_name}
+        params={'file_name': file_name}, json={'client_id': cache.client_id}
     )
-    file_to_read = "Cache{}/".format(cache.client_id) + file_name + '.txt'
-    file_name += '.txt'
-    print 'file name client has requested {}'.format(file_name)
+    not_locked = response_from_directory_server.json()['lock']
+    file_server_id = response_from_directory_server.json()['file_server_id']
+    print not_locked
+    if not_locked and file_server_id is not None:
+        file_to_read = "Cache{}/".format(cache.client_id) + file_name + '.txt'
+        file_name += '.txt'
+        print 'file name client has requested {}'.format(file_name)
 
-    file_id, file_server_id, version, file_server_details = Sff.get_file_details_from_DS(
-        response_from_directory_server)
+        file_id, file_server_id, version, file_server_details = Sff.get_file_details_from_DS(
+            response_from_directory_server)
 
-    # update cache if (1) The file is not in the cache (2) the copy in the cache is out of date
-    if cache.get_key_to_file(file_name) is None or version > cache.get_version_of_file(file_name):
-        # getting file details
-        Sff.print_file_details(file_name, file_id, file_server_id, version)
+        # update cache if (1) The file is not in the cache (2) the copy in the cache is out of date
+        if cache.get_key_to_file(file_name) is None or version > cache.get_version_of_file(file_name):
+            # getting file details
+            Sff.print_file_details(file_name, file_id, file_server_id, version)
 
-        # check and see if the file details are up to date - if they are ignore, else update cache
-        if file_server_details is not None and file_id is not None:
-            response_from_directory_server = requests.get(
-                Sff.create_url(file_server_details[0], file_server_details[1]),
-                params={'file_id': file_id, 'file_server_id': file_server_id}
-            )
-            # update cache
-            print "Updating data in the cache..."
-            data = response_from_directory_server.json()['file_str']
-            print data
-            cache.update_data_in_cache(file_to_read, data)
+            # check and see if the file details are up to date - if they are ignore, else update cache
+            if file_server_details is not None and file_id is not None:
+                response_from_directory_server = requests.get(
+                    Sff.create_url(file_server_details[0], file_server_details[1]),
+                    params={'file_id': file_id, 'file_server_id': file_server_id}
+                )
+                # update cache
+                print "Updating data in the cache..."
+                data = response_from_directory_server.json()['file_str']
+                print data
+                cache.update_data_in_cache(file_to_read, data)
 
-    if not os.path.exists(file_to_read):
-        print "ERROR: file {} does not exists in cache or on the server....\n Please enter a" \
-              " valid file name or create a new file...\n".format(file_name)
-        return
+        if not os.path.exists(file_to_read):
+            print "ERROR: file {} does not exists in cache or on the server....\n Please enter a" \
+                  " valid file name or create a new file...\n".format(file_name)
+            return
 
-    open_file = open(file_to_read, 'r')
-    dat = open_file.read()
-    open_file.close()
+        open_file = open(file_to_read, 'r')
+        dat = open_file.read()
+        open_file.close()
 
-    open_text_editor(file_to_read)
-    data_to_cache = open(file_to_read, 'r').read()
-    if dat is not data_to_cache:  # if the data in the file is updated, update the data in the cache, else continue
-        print "adding data to the cache\nLocation {}".format(file_name)
-        cache.add_cache_entry(file_name, cache.set_version_of_file(file_name), data_to_cache)
+        open_text_editor(file_to_read)
+        data_to_cache = open(file_to_read, 'r').read()
+        if dat is not data_to_cache:  # if the data in the file is updated, update the data in the cache, else continue
+            print "adding data to the cache\nLocation {}".format(file_name)
+            cache.add_cache_entry(file_name, cache.set_version_of_file(file_name), data_to_cache)
+    else:
+        print "file is locked come back later..."
 
 
 def write_file_to_server(file_name, cache):
@@ -104,7 +112,7 @@ def write_file_to_server(file_name, cache):
         # I have a file in the cache
         response_from_directory_server = requests.get(
             Sff.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
-            params={'file_name': file_name}
+            params={'file_name': file_name}, json={'client_id': cache.client_id}
         )
         file_id, file_server_id, version, file_server_details = Sff.get_file_details_from_DS(
             response_from_directory_server)
@@ -158,7 +166,7 @@ def verify_file_exists(file_name, cache):
     try:
         response_from_directory_server = requests.get(
             Sff.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
-            params={'file_name': file_name}
+            params={'file_name': file_name}, json={'client_id': cache.client_id}
         )
         file_server_details = response_from_directory_server.json()['file_server_details']
         file_id = response_from_directory_server.json()['file_id']
@@ -190,10 +198,10 @@ def create_cache_for_client(client_id, path):
 def create_new_file(file_name, cache):
     try:
         print "Creating a new file {0} for the client{1}\n".format(file_name, cache.client_id)
-        request_to_server = {'file_name': file_name, 'version': str(datetime.datetime.now())}
         response = requests.post(
             Sff.create_url(DIRECTORY_SERVER_DETAILS[0], DIRECTORY_SERVER_DETAILS[1]),
-            params=request_to_server
+            params={'file_name': file_name}, json={'client_id': cache.client_id}
+
         )
         open_file = open(file_name + '.txt', 'w')
         open_file.write("First Time file is opened.... Edit me!")
