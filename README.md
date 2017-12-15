@@ -105,9 +105,9 @@ The client.py script is what provides a basic UI for the client. It simply provi
 either read, write, create file, verify if a file exists; locally or on a file server, and then exit the program.
 
 ### 2: File Server ###
-The file servers are implemented such that they store the files as a flat-file system, where the files are stored in the
-file server without any deeper directories used. The file server directories are named using the file servers *file_server_id*;
-which is created when the file server first registers itself with the directory server, appended to 'Server';
+The file server class is implemented such that it store the files as a flat-file system, where the files are stored in the file server without any deeper directories used. 
+
+The file server directories are named using the file servers *file_server_id*; which is created when the file server first registers itself with the directory server, appended to 'Server';
 ie, 'Server0/', 'Server1/' etc. The file servers directory is created when the file server starts up, just after the file server has registered
 with the directory server; hence the *server_id* can be used to ID the file server.
 
@@ -117,71 +117,60 @@ present on a given file server; for example, if a client were to add a new file 
 bw 11.
 
 The server accepts get() and post() requests from all clients that are connected and know the file servers IP and port
-number. It can be reached at any available host address and port specified by the user, which are provided as sys.argv[0] and sys.argv[1].
+number. It can be reached at any available host address and port specified by the user, which are passed as sys.argv[0] and sys.argv[1].
 For the client to communicate with the file server, it must first communicate with the directory server, which will be discussed below.
 
 *    A client that wishes to read a remote copy of a file from a file server will need to send a get() request. The client must provide
-JSON parameters:
-*        'file_id': file_id
-*        'file_server_id': file_server_id
-*    A client wishing to write to a remote copy of a file will send a post() request. The client must provide JSON parameters:
-*        'file_id': file_id
-*        'data': data
-*        'server_id': file_server_id
-*        'file_name': file_name
+JSON parameters {'file_id': file_id, 'file_server_id': file_server_id}
+*    A client wishing to write to a remote copy of a file will send a post() request. The client must provide JSON parameters {'file_id': file_id, 'data': data, 'server_id': file_server_id, 'file_name': file_name}
 
-NOTE: There is no *versioning* in that any files written to on the file server is overwritten.
-The file servers hold no information with regards to the versions of the file. All of this information is stored on the directory server.
-The versioning implemented is the time/date stamp at which the file was last edited.
-The file servers are hosted on ports 46668, 46669 etc etc, which are passed in as environment variables at run time.
+NOTE: 
+
+*    There is no *versioning* in that any files written to on the file server are overwritten. The file servers hold no information with regards to the versions of the file. All of this information is stored on the directory server.
+*    The versioning implemented is the time/date stamp at which the file was last edited.
+*    The file servers are hosted on ports 46668, 46669 etc etc, which are passed in as environment variables at run time.
 
 ## Component 2: Directory Service ##
+
 ### Directory Server ###
 The directory server must be started of first; just after the *install_requirements.sh* script.
-This is started up first as the file server and locking server need to register themselves with it and this
-process has been discussed above in detail. the Directory server is hosted on the URL "http://127.0.0.1:46666".
-The URL for the Directory Server is known by all parts of the service, and is hard coded as a global varaible.
-The Directory Server acts as a management server for the entire distributed file system.
-The Directory server maintains a record of the mappings of the client names as well as the file mappings; ie a list of all connected clients
-and a list of files that are stored on which file servers , the files are stored like; Server1/0txt etc
+This is started up first as the file server and locking server need to register themselves with it and this process has been discussed above in detail. the Directory server is hosted on the URL "http://127.0.0.1:46666".
+
+*    The URL for the Directory Server is known by all parts of the service, and is hardcoded as a global variable.
+*    The Directory Server acts as a management server for the entire distributed file system.
+*    The Directory server maintains a record of the mappings of the client names as well as the file mappings; ie a list of all connected clients and a list of files that are stored on each of the file servers. On the fileservers, the files are stored like; Server1/0.txt etc.
 
 The Directory server takes in a request by a client, and checks whether the file the client has requested exists on a file server.
-If the file exists, the directory server returns the IP address and port number of the file server to the client as well as the
-version of the file, and the client can make communications with the file server using these details if the version of the file
-stored on the client is not up-to-date; If the version the client has stored in his cache is out-of-sync with the file server
-because another client has since written to the file.
+*    If the file exists, the directory server returns the IP address and port number of the file server to the client as well as the version of the file, and the client can make communications with the file server using these details.
+*    If the version of the file stored on the client is not up-to-date/out-of-sync with the file server this is because another client has since written to the file.
 
-The same works for a write operation also, but if the file doesnt exist on a file server,
-a round robin protocol style method is used to assign the file to a file server.
-The file server to store the file is chosen by the directory server because it has the least number files stored on it; ie the directory server
-will find the file server that contains the fewest number of files and then uses this file server to store the new file - To make this system a little
-more fairer in terms of how much data is stored by the file servers would be to assign the new files to the servers that contain the largest
-amount out data, and not the largest number of files.
+The same works for a write operation also, but if the file doesn't exist on a file server, a round-robin style approach is used to assign the file to the file server with the least load at that time. The load on each of the connected fileservers is something that the directory server maintains a record of alongside the mappings and versions for the files.
+*    The file server to store the file is chosen by the directory server because it has the least number files stored on it; i.e the directory server will find the file server that contains the fewest number of files and then uses this file server to store the new file
+*    To make this system a little more fair in terms of how much data is stored by the file servers, a possible enhancement would be to assign the new files to the servers that contain the largest _amount of data_, and not just the largest number of files.
 
-The directory server also performs the following:
-* It acts a registration system as mentioned above for the file server and lock server
-* IT performs a load balancing on the file servers by means of Round-Robin based on the number of files that are currently
-stored on the server. The directory server will forward the file onto the least loaded file server to be stored.
+The directory server also performs the following functions:
+
+*    It acts a registration system as mentioned above for the file server and lock server
+*    It performs a load-balancing on the file servers by means of Round-Robin based on the number of files that are currently stored on the server, as previously described. The directory server will forward the file onto the least loaded file server to be stored.
 
 ## Component 3: Caching ##
 ### Caching for the client ###
-Each client has its own cache implemented as a caching *object*. The cache is implemented using Least Recently Used; *LRU*, eviction policy,
-where each file is stored with a time-date stamp, and the file that was accessed least recently is evicted. ie the file that was accessed
-the furthest back in time will be the first one evicted if a new file is read in from the file server or if a new file is created by the client.
-Every time a file is read from a file server; the file will only be read in from the file server if it currently isnt present in the cache
-or if the version on the cache is out of date compared to the file server, or created locally, it is added to the cache, with its time date stamp, which is formatted
-as follows *2012-12-15 01:21:05*.
+Each client has its own cache implemented as a caching *object*. The cache is implemented using Least Recently Used "*LRU*" eviction policy, where each file is stored with a time-date stamp, and the file that was accessed least recently is evicted. In practical terms, this means that the file that was accessed
+the furthest back in time will be the first one evicted if (i) a new file is read in from the file server, or (ii) if a new file is created by the client.
 
-The cache can store currently only 3 files simply for the point of illustration, to increase the number of files that the cache
-can store, simply increase the size of MAX_SIZE_OF_CACHE, which can be found at the top of the cache class.
-This cache is implemented as a * Direct Mapped Cache*; each tag has its own slot in cache memory.
-The operations that can be performed by the cache, with interest to the client, are:
-1.  Read from cache:
-    *  which allows the user to read files from the cache if the version stored is the same as the version that is stored on the directory server.
-2. Add cache entry:
-    *  This method will add a new entry to the cache table if the file isnt in the table at present. This method implements linear probing when adding files to the cache,
+Every time a file is read, it will only be read in from the file server if (i) it currently isn't present in the cache, or (ii) if the version in the cache is out-of-date compared to the file server, or (iii) it was created locally. Whatever the case, when it is added to the cache it is added with a time date stamp corresponding to the time that it was last updated in the cache, which is formatted
+as follows: *2012-12-15 01:21:05*.
+
+The cache can store up to a maximum of 3 files simply for the purpose of illustration. Depending on the requirements of the application, it might make more sense to increase the number of entries allowed in the cache at any one time. To increase the number of files that the cache can store, the value of global variable MAX_SIZE_OF_CACHE could easily be altered (which can be found at the top of the cache class).
+
+This cache is implemented as a * Direct Mapped Cache*; each tag has its own slot in cache memory. The operations that can be performed by the cache, that are of direct relevance to the client, are:
+
+1. Reading from cache
+    * This allows the user to read files from the cache if the version stored is the same as the version that is stored on the directory server.
+2. Adding a new cache entry
+    * This method will add a new entry to the cache table if the file isnt in the table at present. This method implements linear probing when adding files to the cache,
     once the cache is full, this function will then begin using the LRU eviction policy. 
-3. Update data in cache:
+3. Updating a cache entry
     * This method will update the data that is stored in a file if the version on the cache is out of sync with the file server.
 
 
