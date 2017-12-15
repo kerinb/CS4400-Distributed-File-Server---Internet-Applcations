@@ -1,17 +1,41 @@
 import os
 
 import datetime
+from sys import platform as _platform
 import requests
 import sys
+import subprocess as sp
 
 CURR_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(CURR_DIR))
 import SharedFileFunctions as Sff
 import Cache
 
+TEXT_EDITOR = None
 DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 5000)
 CACHE_DIR = ''
 LIST_OF_UNACCEPTABLE_FILE_NAMES = ['', '\n', ' ', '\t', '   ']
+editor = None
+
+
+def open_text_editor(file_to_read):
+    global editor
+    print 'platform' + _platform
+    if _platform == "linux" or _platform == "linux2":
+        print "OS = Linux"
+        if editor is None:
+            while True:
+                editor = raw_input("Enter G to use gedit or N to use Nano\n")
+                editor = editor.capitalize()
+                if editor in ['N', 'G']:
+                    break
+        if editor == 'N':
+            sp.call(['nano', file_to_read])
+        elif editor == 'G':
+            os.system('gedit "{0}"'.format(file_to_read))
+    elif _platform == "win32" or "win64":
+        print "OS = Windows"
+        sp.Popen(['notepad.exe', file_to_read]).wait()
 
 
 def get_client_num():
@@ -65,7 +89,8 @@ def read_file_from_server(file_name, cache):
     open_file = open(file_to_read, 'r')
     dat = open_file.read()
     open_file.close()
-    os.system('gedit "{0}"'.format(file_to_read))
+
+    open_text_editor(file_to_read)
     data_to_cache = open(file_to_read, 'r').read()
     if dat is not data_to_cache:  # if the data in the file is updated, update the data in the cache, else continue
         print "adding data to the cache\nLocation {}".format(file_name)
@@ -103,7 +128,7 @@ def write_file_to_server(file_name, cache):
             dat = open_file.read()
             open_file.close()
 
-            os.system('gedit "{0}"'.format(file_to_read))  # last chance to edit file before synch w/ server
+            open_text_editor(file_to_read)
             file_ = open(file_to_read, 'r')
             data_to_send = file_.read()
             file_.close()

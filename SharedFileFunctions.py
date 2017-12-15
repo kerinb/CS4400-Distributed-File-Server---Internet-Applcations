@@ -22,13 +22,13 @@ def cast_file_id_to_file_name(file_id):
 
 
 def print_file_details(file_name, file_id, file_server_id, version):
-    print"|---------- File Information ---------|\n" \
-         "|=====================================|\n" \
-         "| File Name: {}                       |\n" \
-         "| File ID: {}                          |\n" \
-         "| File Server ID: {}                   |\n" \
-         "| Version Of File On Server: {}     |\n" \
-         "|=====================================|\n".format(file_name, file_id, file_server_id, version)
+    print"---------- File Information ---------\n" \
+         "=====================================\n" \
+         " File Name: {}                       \n" \
+         " File ID: {}                          \n" \
+         " File Server ID: {}                   \n" \
+         " Version Of File On Server: {}    \n" \
+         "=====================================\n".format(file_name, file_id, file_server_id, version)
 
 
 def get_file_details_from_DS(response_from_directory_server):
