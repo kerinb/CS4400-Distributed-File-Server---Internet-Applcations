@@ -49,7 +49,7 @@ The list below shows the order in which to run each of the scripts.
     * This address and port number is known by every entity that requires it, i.e. the file servers, locking server and client API.
 *    **./launch_locking_server.sh**
     * This script runs the locking server. In relation to the order of launch, this and the file server scripts can be run interchangeably.
-    * This script runs the locking server at URL **http://127.0.0.1:46667"**.
+    * This script runs the locking server at URL **http://127.0.0.1:46667**.
 *    **./launch_file_server.sh <number_of_servers_to_spawn>**
     * This script runs up a series of file servers. For this file, the number of file servers to spawn must be specified in the
     <number_of_servers_to_spawn> field. Here, the first file server will be hosted on port "46668",  and every subsequent file server spawned
@@ -125,7 +125,7 @@ It can be reached at any available host address and port specified by the user, 
 For the client to communicate with the file server, it must first communicate with the directory server, which will be discussed below.
 
 *    A client that wishes to read a remote copy of a file from a file server will need to send a get() request. The client must provide
-JSON parameters {'file_id': file_id, 'file_server_id': file_server_id}
+JSON parameters **{'file_id': file_id, 'file_server_id': file_server_id}**.
 *    A client wishing to write to a remote copy of a file will send a post() request. The client must provide JSON parameters **{'file_id': file_id, 'data': data, 'server_id': file_server_id, 'file_name': file_name}**
 
 **NOTE**: 
@@ -192,7 +192,7 @@ I have also implemented a timer on the lock.
 *    If the lock has been on a file for longer than **1 minute/60 seconds**, the file is then unlocked. My assumption here is that, when I place a lock on a file (which only happens when a client is writing to a file), that it shouldn't take longer than 1 minute to write my data into the file.
 *    Basically if the time taken to write to the file is greater than 1 minute, I have assumed that the client is dead, and the file is then unlocked so that other clients can access it.
 
-This method is the **morgan_turn_on_the_clock** method (https://www.youtube.com/watch?v=l0JaxtwVteY skip to 0:35 to understand..!)
+This method is the **morgan_turn_on_the_clock** method (click [here](https://www.youtube.com/watch?v=l0JaxtwVteY) and  skip to 0:35 to understand..!)
 
 ## Screenshots ##
 ###Client Images ###
