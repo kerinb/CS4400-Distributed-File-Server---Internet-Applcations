@@ -1,4 +1,6 @@
 import os
+from threading import Timer
+
 import requests
 import sys
 from flask import Flask, request
@@ -15,6 +17,18 @@ api = Api(app)
 FILES_WITH_LOCK = {}
 
 DIRECTORY_SERVER_DETAILS = ('127.0.0.1', 46666)
+
+
+def unlock_time(file_server_id, file_id, client_id):
+    key = str(file_server_id) + '/' + str(file_id)
+
+    if FILES_WITH_LOCK[key] == client_id:
+        del FILES_WITH_LOCK[key]
+
+
+def morgan_turn_on_the_clock(file_server_id, file_id, client_id):
+    t = Timer(60.0, unlock_time(file_server_id, file_id, client_id))
+    t.start()
 
 
 class LockingServer(Resource):
@@ -34,6 +48,7 @@ class LockingServer(Resource):
 
         else:
             FILES_WITH_LOCK[key] = client_id
+            morgan_turn_on_the_clock(file_server_id, file_id, client_id)
             return {'lock': True}
 
     # remove lock on file
